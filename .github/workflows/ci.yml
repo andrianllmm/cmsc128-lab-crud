@@ -27,6 +27,10 @@ jobs:
 
       - run: pnpm --filter backend typecheck
 
+      # Download the in-memory MongoDB binary once, so the test files running
+      # in parallel don't all race to download it to the same path
+      - run: pnpm --filter backend exec node --input-type=module -e "import { MongoBinary } from 'mongodb-memory-server'; await MongoBinary.getPath();"
+
       - run: pnpm --filter backend test
 
       - run: pnpm --filter frontend build
