@@ -5,11 +5,11 @@ import { Loader2Icon } from "lucide-react";
 import { createTaskSchema, type CreateTaskInput } from "@/schemas/tasks";
 import { TITLE_MAX_LENGTH, type Task } from "@/types/tasks";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { FormField } from "@/components/ui/form-field";
 import { PrioritySelect } from "@/components/priority-select";
 import { TagSelect } from "@/components/tag-select";
+import { HighlightedInput } from "@/components/highlighted-input";
 import { parseTaskInput } from "@/lib/parse-task";
 
 interface TaskFormProps {
@@ -94,15 +94,17 @@ export function TaskForm({
       {/* Title */}
       <form.Field name="title">
         {(field) => {
-          const cleanTitle = parseTaskInput(field.state.value).title;
+          // Only the create form parses keywords
+          const parsed = task ? null : parseTaskInput(field.state.value);
           return (
             <FormField
               htmlFor={`${id}-title`}
               label="Title"
               error={field.state.meta.errors[0]?.message}
             >
-              <Input
+              <HighlightedInput
                 id={`${id}-title`}
+                matches={parsed?.matches ?? []}
                 placeholder={
                   task
                     ? "What do you want to do?"
@@ -118,9 +120,9 @@ export function TaskForm({
                 autoFocus={!task}
               />
               {/* Preview the title that will be saved once keywords are removed */}
-              {!task && cleanTitle !== field.state.value.trim() && (
+              {parsed && parsed.title !== field.state.value.trim() && (
                 <p className="text-sm text-muted-foreground">
-                  Saved as &ldquo;{cleanTitle}&rdquo;
+                  Saved as &ldquo;{parsed.title}&rdquo;
                 </p>
               )}
             </FormField>
