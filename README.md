@@ -8,6 +8,7 @@ A to-do list app built with the MERN stack.
 
 - Task list showing title, due date, priority, and tag for every task.
 - Add tasks with title, due date and time, priority, and tag.
+- Type a task in plain language, like `Buy milk tomorrow 5pm #personal !high`: the date phrase, `#tag`, and `!priority` are highlighted in the title and fill in the form fields, which can be corrected before saving (`frontend/src/lib/parse-task.ts`).
 - Edit any field of a task.
 - Delete tasks behind a confirmation dialog.
 - Undo a delete within 5 seconds via a toast; the task is only removed from the database once the toast closes (`frontend/src/hooks/useTasks.ts`).
@@ -53,6 +54,8 @@ React with Vite gives fast local development and a component-based UI, which mak
 TypeScript over plain JavaScript catches field typos and shape mismatches at compile time instead of at runtime.
 
 One language (TypeScript) across frontend and backend also means one set of types and tooling to maintain, and the same task shape is defined on both sides with matching validation rules.
+
+`chrono-node` parses the date phrase in natural-language task input. Dates come in too many forms ("tomorrow 5pm", "next friday", "in 3 days", "Dec 1") to match reliably with hand-written rules, and chrono also reports where the phrase sits in the text, which is what lets it be removed from the title and highlighted. Tags and priorities are a fixed list, so a simple `#word`/`!word` regex checked against `TAGS` and `PRIORITIES` is enough for those.
 
 Server-side sessions can be revoked immediately (on logout or password change), unlike JWTs, and storing them in MongoDB avoids adding another service. Argon2id is the password hash recommended by OWASP.
 
