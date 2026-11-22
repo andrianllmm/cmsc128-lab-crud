@@ -65,7 +65,8 @@ export function HighlightedInput({
         aria-hidden
         className="pointer-events-none absolute inset-0 flex items-center overflow-hidden border border-transparent px-2.5 py-1 text-base whitespace-pre text-foreground md:text-sm"
       >
-        {pieces}
+        {/* One inline wrapper, since flex drops whitespace-only text between marks */}
+        <span>{pieces}</span>
       </div>
     </div>
   );
