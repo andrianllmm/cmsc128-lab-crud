@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface UserAvatarProps {
   displayName: string;
-  size?: "default" | "sm" | "lg";
+  size?: "default" | "sm" | "xs" | "lg";
   // Names the avatar for screen readers and shows on hover
   label?: string;
 }

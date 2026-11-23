@@ -229,8 +229,8 @@ export function TaskToolbar({
 
 function Member({ member }: { member: ListUser }) {
   return (
-    <span className="flex min-w-0 items-center gap-2">
-      <UserAvatar displayName={member.displayName} size="sm" />
+    <span className="flex min-w-0 items-center gap-1">
+      <UserAvatar displayName={member.displayName} size="xs" />
       <span className="truncate">{member.displayName}</span>
     </span>
   );

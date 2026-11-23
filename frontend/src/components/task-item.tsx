@@ -99,8 +99,8 @@ export function TaskItem({
 
             {/* Assignee */}
             {task.assignee && (
-              <span className="flex items-center gap-1.5 text-muted-foreground">
-                <UserAvatar displayName={task.assignee.displayName} size="sm" />
+              <span className="flex items-center gap-1 text-muted-foreground">
+                <UserAvatar displayName={task.assignee.displayName} size="xs" />
                 {task.assignee.displayName}
               </span>
             )}
