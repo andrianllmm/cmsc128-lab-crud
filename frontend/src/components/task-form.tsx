@@ -177,7 +177,7 @@ export function TaskForm({
                 selected={field.state.value ?? undefined}
                 onSelect={(date) => field.handleChange(date ?? null)}
                 placeholder="Due date"
-                className="max-w-full"
+                className="max-w-full border-0 bg-transparent shadow-none dark:bg-transparent"
               />
             )}
           </form.Field>

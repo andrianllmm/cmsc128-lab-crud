@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { isPast } from "date-fns";
+import { CalendarIcon } from "lucide-react";
 import { formatDueDate } from "@/lib/dates";
 import type { UpdateTaskInput } from "@/schemas/tasks";
 import type { ListUser } from "@/types/lists";
@@ -73,13 +74,14 @@ export function TaskItem({
             {task.dueDate && (
               <span
                 className={cn(
-                  "text-muted-foreground",
+                  "flex items-center gap-1 text-muted-foreground",
                   // Overdue if past due and not done
                   !task.done &&
                     isPast(new Date(task.dueDate)) &&
                     "text-destructive",
                 )}
               >
+                <CalendarIcon className="size-3.5" aria-hidden />
                 {formatDueDate(new Date(task.dueDate))}
               </span>
             )}
