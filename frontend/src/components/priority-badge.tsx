@@ -1,40 +1,29 @@
-import { cva, type VariantProps } from "class-variance-authority";
+import { FlagIcon } from "lucide-react";
 import { cn } from "cn";
-import { Badge } from "@/components/ui/badge";
 import type { Priority } from "@/types/tasks";
 
-const priorityBadgeVariants = cva("", {
-  variants: {
-    priority: {
-      High: "border-transparent bg-red-500/10 text-red-700 dark:bg-red-500/20 dark:text-red-400",
-      Medium:
-        "border-transparent bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400",
-      Low: "border-transparent bg-blue-500/10 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400",
-      None: "",
-    },
-  },
-  defaultVariants: {
-    priority: "None",
-  },
-});
+const FLAG_COLORS: Record<Priority, string> = {
+  High: "fill-red-500 text-red-500",
+  Medium: "fill-orange-500 text-orange-500",
+  Low: "fill-blue-500 text-blue-500",
+  None: "text-muted-foreground",
+};
 
-interface PriorityBadgeProps
-  extends
-    Omit<React.ComponentProps<typeof Badge>, "variant" | "children">,
-    VariantProps<typeof priorityBadgeVariants> {
+interface PriorityBadgeProps extends React.ComponentProps<"span"> {
   priority: Priority;
 }
 
+// A colored flag with the priority's name
 function PriorityBadge({ priority, className, ...props }: PriorityBadgeProps) {
   return (
-    <Badge
-      variant={priority === "None" ? "outline" : "default"}
-      className={cn(priorityBadgeVariants({ priority }), className)}
+    <span
+      className={cn("inline-flex items-center gap-1", className)}
       {...props}
     >
+      <FlagIcon className={cn("size-3.5", FLAG_COLORS[priority])} aria-hidden />
       {priority}
-    </Badge>
+    </span>
   );
 }
 
-export { PriorityBadge, priorityBadgeVariants };
+export { PriorityBadge };
