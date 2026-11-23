@@ -17,8 +17,10 @@ export function AddTaskDialog({ members, onSubmit }: AddTaskDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      {/* Near the top on phones so the keyboard doesn't cover it */}
+      {/* Near the top on phones so the keyboard doesn't cover it.
+          Kept mounted so closing by accident keeps the draft */}
       <DialogContent
+        keepMounted
         showCloseButton={false}
         className="top-4 translate-y-0 p-3 sm:top-1/2 sm:max-w-xl sm:-translate-y-1/2"
       >

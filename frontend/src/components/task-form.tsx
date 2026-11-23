@@ -69,6 +69,16 @@ export function TaskForm({
     },
   });
 
+  // Cancelling the create form discards its draft
+  function handleCancel() {
+    if (!task) {
+      form.reset();
+      lastParsed.current = parseTaskInput("");
+      setDismissed(new Set());
+    }
+    onCancel?.();
+  }
+
   /**
    * Fills the due date, priority, and tag fields from keywords in the title.
    * */
@@ -220,7 +230,7 @@ export function TaskForm({
               variant="ghost"
               size="icon-sm"
               aria-label="Cancel"
-              onClick={onCancel}
+              onClick={handleCancel}
             >
               <XIcon />
             </Button>
