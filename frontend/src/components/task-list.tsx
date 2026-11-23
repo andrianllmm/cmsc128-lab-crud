@@ -101,7 +101,7 @@ function TaskListEmpty({
         </Button>
       ) : (
         <p className="text-sm text-muted-foreground">
-          Add one with the form above.
+          Add one with the + button.
         </p>
       )}
     </div>

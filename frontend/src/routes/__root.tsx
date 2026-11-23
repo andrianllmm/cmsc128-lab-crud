@@ -15,6 +15,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { AddTaskFab } from "@/components/add-task-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { TaskComposerProvider } from "@/hooks/useTaskComposer";
 import type { User } from "@/types/users";
@@ -63,6 +64,7 @@ function AppLayout({ user }: { user: User }) {
             <SidebarTrigger />
           </header>
           <Outlet />
+          <AddTaskFab />
         </SidebarInset>
       </SidebarProvider>
     </TaskComposerProvider>

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { TaskList } from "@/components/task-list";
 import { TaskToolbar } from "@/components/task-toolbar";
-import { TaskForm } from "@/components/task-form";
+import { AddTaskDialog } from "@/components/add-task-dialog";
 import { listsQueryOptions, useLists } from "@/hooks/useLists";
 import { useTasks } from "@/hooks/useTasks";
 import { useTaskView } from "@/hooks/useTaskView";
@@ -49,7 +49,7 @@ function TasksPage() {
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 pb-24 sm:px-8">
       <h1 className="truncate text-2xl font-bold">{list.name}</h1>
 
-      <TaskForm members={members} onSubmit={createTask} />
+      <AddTaskDialog members={members} onSubmit={createTask} />
 
       <section aria-labelledby="tasks-heading" className="flex flex-col gap-4">
         {/* Count of not done tasks; shows the total too when filtered */}
