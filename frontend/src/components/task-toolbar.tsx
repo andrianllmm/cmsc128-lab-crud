@@ -1,4 +1,9 @@
-import { ArrowUpIcon, ArrowDownIcon, XIcon } from "lucide-react";
+import {
+  ArrowDownIcon,
+  ArrowUpDownIcon,
+  ArrowUpIcon,
+  XIcon,
+} from "lucide-react";
 import {
   SORT_OPTIONS,
   type SortBy,
@@ -9,6 +14,16 @@ import { PRIORITIES, TAGS } from "@/types/tasks";
 import { PriorityBadge } from "@/components/priority-badge";
 import { TagBadge } from "@/components/tag-badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -46,45 +61,58 @@ export function TaskToolbar({
   resetFilters,
   hasActiveFilters,
 }: TaskToolbarProps) {
-  // Describes the action rather than the current state
-  const sortDirLabel =
-    sortDir === "asc" ? "Sort descending instead" : "Sort ascending instead";
-
   return (
     <div className="flex flex-row flex-wrap items-center justify-between gap-2">
       {/* Sorting */}
-      <div className="flex flex-row items-center gap-1">
-        {/* Select sort by option */}
-        <Select
-          value={sortBy}
-          onValueChange={(v) => v && setSortBy(v as SortBy)}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Sort"
+              title="Sort"
+            />
+          }
         >
-          <SelectTrigger aria-label="Sort by">
-            <SelectValue placeholder="Sort by">
-              {(v: SortBy | null) => (v ? SORT_LABELS[v] : "Sort by")}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map((option) => (
-              <SelectItem key={option} value={option}>
-                {SORT_LABELS[option]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <ArrowUpDownIcon />
+        </DropdownMenuTrigger>
 
-        {/* Toggle sort direction */}
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          aria-label={sortDirLabel}
-          title={sortDirLabel}
-          onClick={toggleSortDir}
-        >
-          {sortDir === "asc" ? <ArrowUpIcon /> : <ArrowDownIcon />}
-        </Button>
-      </div>
+        <DropdownMenuContent align="start" className="w-44">
+          {/* Sort by option */}
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={sortBy}
+              onValueChange={(v) => setSortBy(v as SortBy)}
+            >
+              {SORT_OPTIONS.map((option) => (
+                <DropdownMenuRadioItem key={option} value={option}>
+                  {SORT_LABELS[option]}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuGroup>
+
+          <DropdownMenuSeparator />
+
+          {/* Sort direction */}
+          <DropdownMenuRadioGroup
+            value={sortDir}
+            onValueChange={(v) => v !== sortDir && toggleSortDir()}
+          >
+            <DropdownMenuRadioItem value="asc">
+              <ArrowUpIcon />
+              Ascending
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="desc">
+              <ArrowDownIcon />
+              Descending
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       {/* Filtering */}
       <div className="flex flex-row items-center gap-1">
@@ -93,7 +121,10 @@ export function TaskToolbar({
           value={filters.tag}
           onValueChange={(v) => v && updateFilters("tag", v as Filters["tag"])}
         >
-          <SelectTrigger aria-label="Filter by tag">
+          <SelectTrigger
+            aria-label="Filter by tag"
+            className="border-0 dark:bg-transparent"
+          >
             <SelectValue placeholder="Tag">
               {(v: Filters["tag"] | null) =>
                 v && v !== "All" ? <TagBadge tag={v} /> : "All tags"
@@ -118,7 +149,10 @@ export function TaskToolbar({
             v && updateFilters("priority", v as Filters["priority"])
           }
         >
-          <SelectTrigger aria-label="Filter by priority">
+          <SelectTrigger
+            aria-label="Filter by priority"
+            className="border-0 dark:bg-transparent"
+          >
             <SelectValue placeholder="Priority">
               {(v: Filters["priority"] | null) =>
                 v && v !== "All" ? (
