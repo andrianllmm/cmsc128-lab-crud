@@ -6,17 +6,11 @@ import { formatDueDate } from "@/lib/dates";
 import type { UpdateTaskInput } from "@/schemas/tasks";
 import type { ListUser } from "@/types/lists";
 import type { Task } from "@/types/tasks";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PriorityBadge } from "@/components/priority-badge";
 import { TagBadge } from "@/components/tag-badge";
 import { TaskForm } from "@/components/task-form";
+import { TaskDetailsDialog } from "@/components/task-details-dialog";
 import { TaskDeleteConfirmDialog } from "@/components/task-delete-confirm-dialog";
 import { UserAvatar } from "@/components/user-avatar";
 import { cn } from "cn";
@@ -38,7 +32,7 @@ export function TaskItem({
   showCreator,
   members,
 }: TaskItemProps) {
-  const [open, setOpen] = useState(false);
+  const [viewing, setViewing] = useState(false);
   // Edits in place of the row instead of in the dialog
   const [editing, setEditing] = useState(false);
   // Updates optimistically, so there's nothing to wait for
@@ -78,11 +72,11 @@ export function TaskItem({
         ) : (
           <>
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              {/* Title; its overlay makes the whole row open the edit dialog */}
+              {/* Title; its overlay makes the whole row open the task details */}
               <button
                 type="button"
                 aria-haspopup="dialog"
-                onClick={() => setOpen(true)}
+                onClick={() => setViewing(true)}
                 className={cn(
                   "min-w-0 cursor-pointer text-left text-sm wrap-anywhere outline-none after:absolute after:inset-0 after:rounded-lg focus-visible:after:ring-2 focus-visible:after:ring-ring/50",
                   task.done && "text-muted-foreground line-through",
@@ -150,32 +144,15 @@ export function TaskItem({
         )}
       </div>
 
-      {/* Edit task dialog; kept outside the row so the delete dialog isn't nested in it */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent showCloseButton={false} className="sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle>Edit task</DialogTitle>
-            {showCreator && (
-              <DialogDescription className="flex items-center gap-2">
-                <UserAvatar displayName={task.owner.displayName} size="sm" />
-                Created by {task.owner.displayName}
-              </DialogDescription>
-            )}
-          </DialogHeader>
-
-          <TaskForm
-            task={task}
-            members={members}
-            submitLabel="Save"
-            onCancel={() => setOpen(false)}
-            onSubmit={async (data) => {
-              const ok = await onEdit(task._id, data);
-              if (ok) setOpen(false);
-              return ok;
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+      {/* Kept outside the row so the delete dialog isn't nested in it */}
+      <TaskDetailsDialog
+        task={task}
+        open={viewing}
+        onOpenChange={setViewing}
+        onEdit={onEdit}
+        showCreator={showCreator}
+        members={members}
+      />
     </>
   );
 }

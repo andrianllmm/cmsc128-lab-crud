@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { cn } from "cn";
 import { useForm } from "@tanstack/react-form";
 import type { z } from "zod";
 import { ArrowUpIcon, Loader2Icon, XIcon } from "lucide-react";
@@ -21,6 +22,8 @@ interface TaskFormProps {
   onSubmit: (data: CreateTaskInput) => Promise<boolean>;
   // Shows a cancel button when given
   onCancel?: () => void;
+  // E.g. a bigger font; applied to the input and its highlight overlay alike
+  titleClassName?: string;
 }
 
 type TaskFormValues = z.input<typeof createTaskSchema>;
@@ -31,6 +34,7 @@ export function TaskForm({
   submitLabel = "Create",
   onSubmit,
   onCancel,
+  titleClassName,
 }: TaskFormProps) {
   const defaultValues: TaskFormValues = {
     title: task?.title ?? "",
@@ -135,8 +139,11 @@ export function TaskForm({
                     : "e.g. Buy milk tomorrow 5pm #personal !high"
                 }
                 maxLength={TITLE_MAX_LENGTH}
-                className="border-transparent bg-transparent px-0 focus-visible:border-transparent focus-visible:ring-0 aria-invalid:border-transparent aria-invalid:ring-0 dark:bg-transparent"
-                overlayClassName="px-0"
+                className={cn(
+                  "border-transparent bg-transparent px-0 focus-visible:border-transparent focus-visible:ring-0 aria-invalid:border-transparent aria-invalid:ring-0 dark:bg-transparent",
+                  titleClassName,
+                )}
+                overlayClassName={cn("px-0", titleClassName)}
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => {
