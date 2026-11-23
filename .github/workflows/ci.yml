@@ -33,6 +33,8 @@ jobs:
 
       - run: pnpm --filter backend test
 
+      - run: pnpm --filter frontend test
+
       - run: pnpm --filter frontend build
 
   secrets:
