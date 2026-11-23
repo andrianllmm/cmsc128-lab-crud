@@ -6,6 +6,8 @@ export interface TaskMatch {
   kind: "date" | "tag" | "priority";
   start: number;
   end: number;
+  // Lowercased matched text, so a dismissal can be matched against it
+  text: string;
 }
 
 export interface ParsedTask {
@@ -25,6 +27,7 @@ function findOption<T extends string>(
   text: string,
   symbol: "#" | "!",
   options: readonly T[],
+  dismissed: ReadonlySet<string>,
 ) {
   // A symbol followed by one or more letters, digits, or underscores,
   // e.g. "#work" or "!high"; "g" finds every occurrence
@@ -34,22 +37,33 @@ function findOption<T extends string>(
     const value = options.find(
       (option) => option.toLowerCase() === match[1].toLowerCase(),
     );
-    if (value) {
+    if (value && !dismissed.has(match[0].toLowerCase())) {
       return { value, start: match.index, end: match.index + match[0].length };
     }
   }
 }
 
+/** A found keyword's position plus its lowercased text. */
+function range(text: string, { start, end }: { start: number; end: number }) {
+  return { start, end, text: text.slice(start, end).toLowerCase() };
+}
+
 /**
  * Parses input like "Buy milk tomorrow 5pm #personal !high" into a title,
- * due date, tag, and priority. Unrecognized keywords stay in the title.
+ * due date, tag, and priority. Unrecognized keywords, and ones in `dismissed`
+ * (lowercased text the user turned back into plain text), stay in the title.
  * */
-export function parseTaskInput(text: string): ParsedTask {
+export function parseTaskInput(
+  text: string,
+  dismissed: ReadonlySet<string> = new Set(),
+): ParsedTask {
   const matches: TaskMatch[] = [];
   let dueDate: Date | undefined;
 
   // forwardDate makes "friday" mean the coming friday, not the last one
-  const date = chrono.parse(text, new Date(), { forwardDate: true })[0];
+  const date = chrono
+    .parse(text, new Date(), { forwardDate: true })
+    .find((result) => !dismissed.has(result.text.toLowerCase()));
   if (date) {
     // Date-only due dates are stored as the end of their day
     dueDate = date.start.isCertain("hour")
@@ -59,20 +73,15 @@ export function parseTaskInput(text: string): ParsedTask {
       kind: "date",
       start: date.index,
       end: date.index + date.text.length,
+      text: date.text.toLowerCase(),
     });
   }
 
-  const tag = findOption(text, "#", TAGS);
-  if (tag) matches.push({ kind: "tag", start: tag.start, end: tag.end });
+  const tag = findOption(text, "#", TAGS, dismissed);
+  if (tag) matches.push({ kind: "tag", ...range(text, tag) });
 
-  const priority = findOption(text, "!", PRIORITIES);
-  if (priority) {
-    matches.push({
-      kind: "priority",
-      start: priority.start,
-      end: priority.end,
-    });
-  }
+  const priority = findOption(text, "!", PRIORITIES, dismissed);
+  if (priority) matches.push({ kind: "priority", ...range(text, priority) });
 
   // Sort so the title and highlights can be built left to right
   matches.sort((a, b) => a.start - b.start);
