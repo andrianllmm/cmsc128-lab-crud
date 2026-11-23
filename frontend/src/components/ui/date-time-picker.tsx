@@ -76,7 +76,9 @@ export function DateTimePicker({
             )}
           >
             <CalendarIcon />
-            {selected ? format(selected, time ? "PP p" : "PP") : placeholder}
+            <span className="truncate">
+              {selected ? format(selected, time ? "PP p" : "PP") : placeholder}
+            </span>
           </Button>
         }
       />

@@ -9,11 +9,15 @@ import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { FormField } from "@/components/ui/form-field";
 import { PrioritySelect } from "@/components/priority-select";
 import { TagSelect } from "@/components/tag-select";
+import { AssigneeSelect } from "@/components/assignee-select";
 import { HighlightedInput } from "@/components/highlighted-input";
 import { parseTaskInput } from "@/lib/parse-task";
+import type { ListUser } from "@/types/lists";
 
 interface TaskFormProps {
   task?: Task;
+  // Who a task can be assigned to; omitted in personal lists, which have no assignees
+  members?: ListUser[];
   submitLabel?: string;
   onSubmit: (data: CreateTaskInput) => Promise<boolean>;
 }
@@ -22,6 +26,7 @@ type TaskFormValues = z.input<typeof createTaskSchema>;
 
 export function TaskForm({
   task,
+  members,
   submitLabel = "Create",
   onSubmit,
 }: TaskFormProps) {
@@ -33,11 +38,16 @@ export function TaskForm({
     dueDate: task?.dueDate ? new Date(task.dueDate) : null,
     priority: task?.priority ?? "None",
     tag: task?.tag ?? "Others",
+    assignee: task?.assignee?._id ?? null,
   };
 
   // The last parsed keywords, so a field is only overwritten when its keyword
   // changes and the user's manual picks stick while they keep typing
   const lastParsed = useRef(parseTaskInput(""));
+
+  // "@name" only parses where there are members to assign to
+  const parse = (text: string, skip: ReadonlySet<string>) =>
+    parseTaskInput(text, skip, members);
 
   // Keywords (lowercased) the user backspaced back into plain text
   const [dismissed, setDismissed] = useState<ReadonlySet<string>>(new Set());
@@ -64,7 +74,7 @@ export function TaskForm({
    * Fills the due date, priority, and tag fields from keywords in the title.
    * */
   function applyParsed(text: string, skip: ReadonlySet<string>) {
-    const parsed = parseTaskInput(text, skip);
+    const parsed = parse(text, skip);
     const last = lastParsed.current;
 
     if (parsed.dueDate?.getTime() !== last.dueDate?.getTime()) {
@@ -75,6 +85,9 @@ export function TaskForm({
     }
     if (parsed.tag !== last.tag) {
       form.setFieldValue("tag", parsed.tag ?? "Others");
+    }
+    if (parsed.assignee !== last.assignee) {
+      form.setFieldValue("assignee", parsed.assignee ?? null);
     }
 
     lastParsed.current = parsed;
@@ -87,7 +100,7 @@ export function TaskForm({
         e.stopPropagation();
         // Save the create form's title without its keywords
         if (!task) {
-          const parsed = parseTaskInput(form.getFieldValue("title"), dismissed);
+          const parsed = parse(form.getFieldValue("title"), dismissed);
           form.setFieldValue("title", parsed.title);
           lastParsed.current = parseTaskInput(parsed.title);
         }
@@ -99,9 +112,7 @@ export function TaskForm({
       <form.Field name="title">
         {(field) => {
           // Only the create form parses keywords
-          const parsed = task
-            ? null
-            : parseTaskInput(field.state.value, dismissed);
+          const parsed = task ? null : parse(field.state.value, dismissed);
           return (
             <FormField
               htmlFor={`${id}-title`}
@@ -166,7 +177,7 @@ export function TaskForm({
               htmlFor={`${id}-dueDate`}
               label="Due date"
               error={field.state.meta.errors[0]?.message}
-              className="col-span-2 sm:flex-1"
+              className="col-span-2 min-w-0 sm:flex-1"
             >
               <DateTimePicker
                 id={`${id}-dueDate`}
@@ -212,6 +223,27 @@ export function TaskForm({
             </FormField>
           )}
         </form.Field>
+
+        {/* Assignee */}
+        {members && (
+          <form.Field name="assignee">
+            {(field) => (
+              <FormField
+                htmlFor={`${id}-assignee`}
+                label="Assignee"
+                error={field.state.meta.errors[0]?.message}
+                className="col-span-2 min-w-0 sm:col-span-1 sm:flex-1"
+              >
+                <AssigneeSelect
+                  id={`${id}-assignee`}
+                  members={members}
+                  value={field.state.value}
+                  onValueChange={field.handleChange}
+                />
+              </FormField>
+            )}
+          </form.Field>
+        )}
       </div>
 
       <form.Subscribe selector={(state) => state.isSubmitting}>

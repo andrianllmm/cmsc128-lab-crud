@@ -9,6 +9,8 @@ export interface Task {
   _id: string;
   // The user who created the task
   owner: { _id: string; displayName: string };
+  // The list member responsible for the task
+  assignee?: { _id: string; displayName: string } | null;
   title: string;
   dueDate?: string | null;
   done: boolean;

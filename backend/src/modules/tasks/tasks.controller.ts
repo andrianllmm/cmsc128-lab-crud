@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 
 import { taskService } from "./tasks.service.js";
+import type { ListAccess } from "../lists/lists.model.js";
 import type { ListIdInput } from "../lists/lists.schema.js";
 import type {
   TaskIdInput,
@@ -10,6 +11,17 @@ import type {
 
 // Task routes are nested under a list, so their params include `listId`
 type TaskParams = ListIdInput & TaskIdInput;
+
+/**
+ * Whether the assignee (if any) is the list's owner or a member.
+ * Anyone else would see the task's title by being assigned, so it's rejected.
+ * */
+const isAssignable = (list: ListAccess, assignee?: string | null) =>
+  !assignee ||
+  list.owner.equals(assignee) ||
+  list.members.some((id) => id.equals(assignee));
+
+const notAssignable = { message: "Assignee must be a member of the list" };
 
 const getTasks = async (req: Request<ListIdInput>, res: Response) => {
   const tasks = await taskService.getTasks(req.params.listId);
@@ -30,6 +42,10 @@ const createTask = async (
   req: Request<ListIdInput, unknown, CreateTaskInput>,
   res: Response,
 ) => {
+  if (!isAssignable(res.locals.list, req.body.assignee)) {
+    return res.status(400).json(notAssignable);
+  }
+
   const task = await taskService.createTask(
     req.params.listId,
     req.session.userId!,
@@ -42,6 +58,10 @@ const updateTask = async (
   req: Request<TaskParams, unknown, UpdateTaskInput>,
   res: Response,
 ) => {
+  if (!isAssignable(res.locals.list, req.body.assignee)) {
+    return res.status(400).json(notAssignable);
+  }
+
   const task = await taskService.updateTask(
     req.params.listId,
     req.params.id,

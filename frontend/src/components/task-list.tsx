@@ -1,5 +1,6 @@
 import { ListChecksIcon, SearchXIcon, TriangleAlertIcon } from "lucide-react";
 import type { UpdateTaskInput } from "@/schemas/tasks";
+import type { ListUser } from "@/types/lists";
 import type { Task } from "@/types/tasks";
 import { TaskItem } from "./task-item";
 import { Button } from "./ui/button";
@@ -15,6 +16,7 @@ interface TaskListProps {
   onEdit: (id: string, data: UpdateTaskInput) => Promise<boolean>;
   onDelete: (id: string) => Promise<boolean>;
   showCreator?: boolean;
+  members?: ListUser[];
 }
 
 export function TaskList({
@@ -27,6 +29,7 @@ export function TaskList({
   onEdit,
   onDelete,
   showCreator,
+  members,
 }: TaskListProps) {
   if (loading) {
     return <TaskListSkeleton />;
@@ -54,6 +57,7 @@ export function TaskList({
             onEdit={onEdit}
             onDelete={onDelete}
             showCreator={showCreator}
+            members={members}
           />
         </li>
       ))}

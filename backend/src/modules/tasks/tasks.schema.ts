@@ -18,6 +18,13 @@ export const createTaskSchema = z.object({
   dueDate: z.exactOptional(z.coerce.date().nullable()),
   priority: z.exactOptional(z.enum(PRIORITIES)),
   tag: z.exactOptional(z.enum(TAGS)),
+  // `null` unassigns; the controller checks the user belongs to the list
+  assignee: z.exactOptional(
+    z
+      .string()
+      .refine(isValidObjectId, { message: "Invalid assignee id" })
+      .nullable(),
+  ),
 });
 
 export const updateTaskSchema = createTaskSchema.partial().extend({

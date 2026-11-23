@@ -15,6 +15,11 @@ const taskSchema = new Schema(
       ref: "User",
       required: true,
     },
+    // The list member responsible for the task, if any
+    assignee: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
     title: {
       type: String,
       required: true,

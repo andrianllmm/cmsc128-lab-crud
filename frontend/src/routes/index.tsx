@@ -64,6 +64,8 @@ function TasksPage() {
     hasActiveFilters,
   } = useTaskView(tasks);
   const todoCount = countTodos(tasks);
+  // Tasks in shared lists can be assigned to anyone in the list
+  const members = list.personal ? undefined : [list.owner, ...list.members];
 
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col gap-10 px-4 py-8 sm:px-6">
@@ -93,7 +95,7 @@ function TasksPage() {
         <NewListDialog onSubmit={handleCreateList} />
       </div>
 
-      <TaskForm onSubmit={createTask} />
+      <TaskForm members={members} onSubmit={createTask} />
 
       <section aria-labelledby="tasks-heading" className="flex flex-col gap-4">
         {/* Count of not done tasks; shows the total too when filtered */}
@@ -125,6 +127,7 @@ function TasksPage() {
           onEdit={updateTask}
           onDelete={deleteTask}
           showCreator={!list.personal}
+          members={members}
         />
       </section>
     </div>

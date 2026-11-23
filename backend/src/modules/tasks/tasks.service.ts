@@ -6,14 +6,17 @@ import type { CreateTaskInput, UpdateTaskInput } from "./tasks.schema.js";
 
 // Reads use `.lean()`: responses only need plain JSON, not full Mongoose documents
 
-// Shows who created each task in shared lists
-const withOwner = { path: "owner", select: "displayName" };
+// Shows who created and who is assigned each task in shared lists
+const withUsers = [
+  { path: "owner", select: "displayName" },
+  { path: "assignee", select: "displayName" },
+];
 
 const getTasks = async (listId: string): Promise<Task[]> => {
   // Oldest first, so the default order is stable
   return TaskModel.find({ list: listId })
     .sort({ createdAt: 1 })
-    .populate(withOwner)
+    .populate(withUsers)
     .lean();
 };
 
@@ -22,7 +25,7 @@ const getTaskById = async (
   id: string,
 ): Promise<Task | null> => {
   return TaskModel.findOne({ _id: id, list: listId })
-    .populate(withOwner)
+    .populate(withUsers)
     .lean();
 };
 
@@ -36,7 +39,7 @@ const createTask = async (
     list: listId,
     owner: ownerId,
   });
-  return task.populate(withOwner);
+  return task.populate(withUsers);
 };
 
 const updateTask = async (
@@ -48,7 +51,7 @@ const updateTask = async (
     returnDocument: "after",
     runValidators: true,
   })
-    .populate(withOwner)
+    .populate(withUsers)
     .lean();
 };
 

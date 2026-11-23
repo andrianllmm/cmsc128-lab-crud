@@ -103,11 +103,15 @@ taskRouter.get(
  *              tag:
  *                type: string
  *                enum: [Work, School, Personal, Others]
+ *              assignee:
+ *                type: string
+ *                nullable: true
+ *                description: Id of a list member; null to unassign
  *    responses:
  *      201:
  *        description: Created task
  *      400:
- *        description: Invalid list id or task data
+ *        description: Invalid list id, task data, or assignee not in the list
  *      401:
  *        description: Not logged in
  *      404:
@@ -150,13 +154,17 @@ taskRouter.post("/", validateBody(createTaskSchema), taskController.createTask);
  *              tag:
  *                type: string
  *                enum: [Work, School, Personal, Others]
+ *              assignee:
+ *                type: string
+ *                nullable: true
+ *                description: Id of a list member; null to unassign
  *              done:
  *                type: boolean
  *    responses:
  *      200:
  *        description: Updated task
  *      400:
- *        description: Invalid list id, task id, or data
+ *        description: Invalid list id, task id, data, or assignee not in the list
  *      401:
  *        description: Not logged in
  *      404:

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { isPast } from "date-fns";
 import { formatDueDate } from "@/lib/dates";
 import type { UpdateTaskInput } from "@/schemas/tasks";
+import type { ListUser } from "@/types/lists";
 import type { Task } from "@/types/tasks";
 import {
   Card,
@@ -31,6 +32,8 @@ interface TaskItemProps {
   onDelete: (id: string) => Promise<boolean>;
   // In shared lists, shows who created the task
   showCreator?: boolean;
+  // Who the task can be assigned to; omitted in personal lists
+  members?: ListUser[];
 }
 
 export function TaskItem({
@@ -38,6 +41,7 @@ export function TaskItem({
   onEdit,
   onDelete,
   showCreator,
+  members,
 }: TaskItemProps) {
   const [open, setOpen] = useState(false);
   // Disables the checkbox while its update is saving
@@ -81,15 +85,8 @@ export function TaskItem({
             </CardTitle>
           </div>
 
-          {/* Creator and delete button */}
+          {/* Delete button */}
           <CardAction className="relative z-10 flex items-center gap-1">
-            {showCreator && (
-              <UserAvatar
-                displayName={task.owner.displayName}
-                size="sm"
-                label={`Created by ${task.owner.displayName}`}
-              />
-            )}
             <TaskDeleteConfirmDialog
               taskTitle={task.title}
               onConfirm={() => onDelete(task._id)}
@@ -121,12 +118,20 @@ export function TaskItem({
 
           {/* Tag; hidden if default */}
           {task.tag !== "Others" && <TagBadge tag={task.tag} />}
+
+          {/* Assignee */}
+          {task.assignee && (
+            <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <UserAvatar displayName={task.assignee.displayName} size="sm" />
+              {task.assignee.displayName}
+            </span>
+          )}
         </CardContent>
       </Card>
 
       {/* Edit task dialog; kept outside the card so the delete dialog isn't nested in it */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Edit task</DialogTitle>
             {showCreator && (
@@ -139,6 +144,7 @@ export function TaskItem({
 
           <TaskForm
             task={task}
+            members={members}
             submitLabel="Save"
             onSubmit={async (data) => {
               const ok = await onEdit(task._id, data);

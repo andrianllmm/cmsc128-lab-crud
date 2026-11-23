@@ -97,6 +97,30 @@ describe("list access", () => {
       .expect(201);
   });
 
+  it("only assigns tasks to people in the list", async () => {
+    const assigned = await alice.agent
+      .post(`/api/lists/${sharedListId}/tasks`)
+      .send({ title: "Assigned", assignee: bob.user._id })
+      .expect(201);
+    assert.equal(assigned.body.assignee.displayName, "bob");
+
+    // Eve isn't in the list, whether on create or update
+    await alice.agent
+      .post(`/api/lists/${sharedListId}/tasks`)
+      .send({ title: "Nope", assignee: eve.user._id })
+      .expect(400);
+    await bob.agent
+      .patch(`/api/lists/${sharedListId}/tasks/${assigned.body._id}`)
+      .send({ assignee: eve.user._id })
+      .expect(400);
+
+    const cleared = await bob.agent
+      .patch(`/api/lists/${sharedListId}/tasks/${assigned.body._id}`)
+      .send({ assignee: null })
+      .expect(200);
+    assert.equal(cleared.body.assignee, null);
+  });
+
   it("blocks members from owner-only actions", async () => {
     await bob.agent
       .post(`/api/lists/${sharedListId}/members`)
