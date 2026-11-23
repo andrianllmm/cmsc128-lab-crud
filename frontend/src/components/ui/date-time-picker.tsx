@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { endOfDay, format, set, startOfDay } from "date-fns";
-import { hasTime } from "@/lib/dates";
+import { endOfDay, set, startOfDay } from "date-fns";
+import { formatDueDate, hasTime } from "@/lib/dates";
 import { CalendarIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -24,6 +24,7 @@ interface DateTimePickerProps {
   onSelect: (date: Date | undefined) => void;
   placeholder?: string;
   className?: string;
+  size?: React.ComponentProps<typeof Button>["size"];
 }
 
 export function DateTimePicker({
@@ -32,6 +33,7 @@ export function DateTimePicker({
   onSelect,
   placeholder = "No date",
   className,
+  size,
 }: DateTimePickerProps) {
   const [open, setOpen] = useState(false);
 
@@ -69,6 +71,7 @@ export function DateTimePicker({
             id={id}
             type="button"
             variant="outline"
+            size={size}
             className={cn(
               "justify-start font-normal",
               !selected && "text-muted-foreground",
@@ -77,7 +80,7 @@ export function DateTimePicker({
           >
             <CalendarIcon />
             <span className="truncate">
-              {selected ? format(selected, time ? "PP p" : "PP") : placeholder}
+              {selected ? formatDueDate(selected) : placeholder}
             </span>
           </Button>
         }

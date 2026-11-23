@@ -30,7 +30,12 @@ export function AssigneeSelect({
       value={value ?? UNASSIGNED}
       onValueChange={(v) => onValueChange(v === UNASSIGNED ? null : v)}
     >
-      <SelectTrigger id={id} className="w-full border-0 dark:bg-transparent">
+      <SelectTrigger
+        id={id}
+        size="sm"
+        aria-label="Assignee"
+        className="border-0 dark:bg-transparent"
+      >
         <SelectValue>
           {(v: string | null) => {
             const member = members.find((m) => m._id === v);
@@ -53,8 +58,8 @@ export function AssigneeSelect({
 
 function Member({ member }: { member: ListUser }) {
   return (
-    <span className="flex min-w-0 items-center gap-2">
-      <UserAvatar displayName={member.displayName} size="sm" />
+    <span className="flex min-w-0 items-center gap-1">
+      <UserAvatar displayName={member.displayName} size="xs" />
       <span className="truncate">{member.displayName}</span>
     </span>
   );

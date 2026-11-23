@@ -1,8 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { LogOutIcon, SettingsIcon, SunMoonIcon } from "lucide-react";
+import {
+  ChevronDownIcon,
+  LogOutIcon,
+  SettingsIcon,
+  SunMoonIcon,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import type { User } from "@/types/users";
-import { Button } from "@/components/ui/button";
+import { SidebarMenuButton } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,18 +30,15 @@ export function UserMenu({ user }: UserMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="rounded-full"
-            aria-label="Open user menu"
-          />
+          <SidebarMenuButton className="w-fit" aria-label="Open user menu" />
         }
       >
-        <UserAvatar displayName={user.displayName} />
+        <UserAvatar displayName={user.displayName} size="sm" />
+        <span className="truncate font-medium">{user.displayName}</span>
+        <ChevronDownIcon />
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="start" className="w-56">
         {/* Profile details; links to the profile page */}
         <DropdownMenuItem render={<Link to="/profile" />}>
           <UserAvatar displayName={user.displayName} />

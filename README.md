@@ -6,14 +6,15 @@ A to-do list app built with the MERN stack.
 
 ### Task Management
 
-- Task list showing title, due date, priority, and tag for every task.
-- Add tasks with title, due date and time, priority, and tag.
+- Task list of minimal rows showing title, due date, priority (colored flag), tag (colored `#tag`), and assignee.
+- Add tasks from a quick-add dialog, opened by the sidebar's Add task button, the floating `+` button, or `Q`. It is one text box with compact due date, priority, tag, and assignee pickers below it. Closing it by accident keeps the draft; the `×` button discards it.
 - Type a task in plain language, like `Buy milk tomorrow 5pm #personal !high`: the date phrase, `#tag`, `!priority`, and `@member` in shared lists (or plain words like `urgent`, `asap`, `high priority`, `p1`) are highlighted in the title and fill in the form fields, which can be corrected before saving (`frontend/src/lib/parse-task.ts`).
-- Edit any field of a task.
+- Edit a task inline from its row (pen button), or click it to open a details view where every field can be edited and saved.
 - Delete tasks behind a confirmation dialog.
 - Undo a delete within 5 seconds via a toast; the task is only removed from the database once the toast closes (`frontend/src/hooks/useTasks.ts`).
-- Mark tasks as done, shown with a checkbox and strikethrough.
-- Sort by date added, due date, priority, or tag (ascending or descending), and filter by tag and priority, client-side (`frontend/src/hooks/useTaskView.ts`).
+- Mark tasks as done with a round checkbox and strikethrough. The checkbox updates instantly and rolls back if the save fails.
+- Sort by date added, due date, priority, or tag (ascending or descending) from a sort menu. Search by title and filter by tag, priority, and assignee, client-side (`frontend/src/hooks/useTaskView.ts`). Typing `#tag`, `!priority`, or `@member` in the search sets that filter.
+- Keyboard shortcuts: `Q` adds a task, `/` focuses the search, and `Ctrl/⌘+B` toggles the sidebar.
 - Tasks persist in MongoDB across browser refreshes and server restarts.
 
 ### Lists
@@ -22,7 +23,7 @@ A to-do list app built with the MERN stack.
 - Create, rename, and delete collaborative lists.
 - Assign tasks in shared lists to a member (the backend rejects anyone outside the list).
 - Add users to a list by email.
-- Switch between your lists and lists you were added to.
+- Switch between your lists and lists you were added to from the sidebar, which also holds each list's members, rename, and delete actions and the account menu.
 - Shared lists show who created each task.
 
 ### Accounts
@@ -432,15 +433,20 @@ Tasks store only `owner` and `list` IDs, and the creator's name comes from `popu
 | `.env` files gitignored, secret scan in CI             | Leaked credentials                                   |
 | `trust proxy` in production                            | `secure` cookies and rate limits behind a host proxy |
 
-### UX/UI (HCI Heuristics)
+### UX/UI
 
-| Heuristic                   | Changes                                                                                                       |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Visibility of system status | Loading states, progress on list delete, success toasts, page titles in tabs                                  |
-| Error recovery              | Inline form errors from the API, a friendly error page with retry, task retry, "server unreachable" message   |
-| No dead ends                | 404 page, empty-state hints, a sign-up link on the login page                                                 |
-| Accessibility               | Higher contrast for badges, errors, and checkboxes; skip-to-content link; navigation buttons exposed as links |
-| Responsive                  | Tall dialogs scroll and the date picker stays on screen on phones                                             |
+The UI was reworked after Todoist, mostly with shadcn/ui components, without changing what the app does.
+
+- A sidebar holds the account menu, an Add task button, and your lists, each with a `⋯` menu for members, rename, and delete.
+- Tasks are added from a quick-add dialog (sidebar, floating `+`, or `Q`): one text box with small date, priority, tag, and assignee pickers. Closing it by accident keeps the draft.
+- Tasks are plain rows with round checkboxes, colored priority flags, and colored `#tags`. They can be edited inline or opened in a details dialog.
+- Sorting moved into a menu, and the toolbar gained a title search (`/`) and an assignee filter.
+- Checking a task off updates instantly and rolls back if the save fails.
+- Loading states, success toasts, progress on list delete, and page titles in tabs show what the app is doing.
+- API errors show inline in forms, failed loads can be retried, and there's a friendly error page and a "server unreachable" message.
+- There are no dead ends: a 404 page, empty-state hints, and a sign-up link on the login page.
+- Badges, errors, and checkboxes have higher contrast, there's a skip-to-content link, and navigation buttons are real links.
+- Dialogs scroll when tall and the date picker stays on screen on phones.
 
 ## Merging Activities 1 and 2
 
@@ -464,5 +470,5 @@ The merge had no Git conflicts, since `main` didn't change after `act2-accounts`
 ### Task Management
 
 ![Task list](docs/images/tasks-list.png)
-![Editing a task](docs/images/tasks-edit.png)
+![Task details](docs/images/tasks-edit.png)
 ![Deleting a task](docs/images/tasks-delete.png)

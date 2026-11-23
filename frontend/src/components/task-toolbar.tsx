@@ -1,4 +1,11 @@
-import { ArrowUpIcon, ArrowDownIcon, XIcon } from "lucide-react";
+import { useRef } from "react";
+import {
+  ArrowDownIcon,
+  ArrowUpDownIcon,
+  ArrowUpIcon,
+  SearchIcon,
+  XIcon,
+} from "lucide-react";
 import {
   SORT_OPTIONS,
   type SortBy,
@@ -6,9 +13,29 @@ import {
   type Filters,
 } from "@/hooks/useTaskView";
 import { PRIORITIES, TAGS } from "@/types/tasks";
+import type { ListUser } from "@/types/lists";
+import { UserAvatar } from "@/components/user-avatar";
+import { useHotkey } from "@/hooks/useHotkey";
+import { parseTaskInput } from "@/lib/parse-task";
 import { PriorityBadge } from "@/components/priority-badge";
 import { TagBadge } from "@/components/tag-badge";
 import { Button } from "@/components/ui/button";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { Kbd } from "@/components/ui/kbd";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -34,6 +61,8 @@ interface TaskToolbarProps {
   updateFilters: <K extends keyof Filters>(field: K, value: Filters[K]) => void;
   resetFilters: () => void;
   hasActiveFilters: boolean;
+  // Who tasks can be assigned to; omitted in personal lists
+  members?: ListUser[];
 }
 
 export function TaskToolbar({
@@ -45,46 +74,105 @@ export function TaskToolbar({
   updateFilters,
   resetFilters,
   hasActiveFilters,
+  members,
 }: TaskToolbarProps) {
-  // Describes the action rather than the current state
-  const sortDirLabel =
-    sortDir === "asc" ? "Sort descending instead" : "Sort ascending instead";
+  // "/" jumps to the search box
+  const searchRef = useRef<HTMLInputElement>(null);
+  useHotkey("/", () => searchRef.current?.focus());
+
+  // Moves "#tag", "!priority", and "@name" into their filters, like the task
+  // form does; dates and plain words stay searchable
+  function handleSearch(text: string) {
+    const parsed = parseTaskInput(text, undefined, members);
+    let search = text;
+    // Right to left so earlier positions stay valid while cutting
+    for (const match of [...parsed.matches].reverse()) {
+      if (!"#!@".includes(text[match.start])) continue;
+      if (match.kind === "tag" && parsed.tag) updateFilters("tag", parsed.tag);
+      if (match.kind === "priority" && parsed.priority) {
+        updateFilters("priority", parsed.priority);
+      }
+      if (match.kind === "assignee" && parsed.assignee) {
+        updateFilters("assignee", parsed.assignee);
+      }
+      search = (search.slice(0, match.start) + search.slice(match.end))
+        .replace(/\s{2,}/g, " ")
+        .trimStart();
+    }
+    updateFilters("search", search);
+  }
 
   return (
     <div className="flex flex-row flex-wrap items-center justify-between gap-2">
       {/* Sorting */}
-      <div className="flex flex-row items-center gap-1">
-        {/* Select sort by option */}
-        <Select
-          value={sortBy}
-          onValueChange={(v) => v && setSortBy(v as SortBy)}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Sort"
+              title="Sort"
+            />
+          }
         >
-          <SelectTrigger aria-label="Sort by">
-            <SelectValue placeholder="Sort by">
-              {(v: SortBy | null) => (v ? SORT_LABELS[v] : "Sort by")}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map((option) => (
-              <SelectItem key={option} value={option}>
-                {SORT_LABELS[option]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <ArrowUpDownIcon />
+        </DropdownMenuTrigger>
 
-        {/* Toggle sort direction */}
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          aria-label={sortDirLabel}
-          title={sortDirLabel}
-          onClick={toggleSortDir}
-        >
-          {sortDir === "asc" ? <ArrowUpIcon /> : <ArrowDownIcon />}
-        </Button>
-      </div>
+        <DropdownMenuContent align="start" className="w-44">
+          {/* Sort by option */}
+          <DropdownMenuGroup>
+            <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={sortBy}
+              onValueChange={(v) => setSortBy(v as SortBy)}
+            >
+              {SORT_OPTIONS.map((option) => (
+                <DropdownMenuRadioItem key={option} value={option}>
+                  {SORT_LABELS[option]}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuGroup>
+
+          <DropdownMenuSeparator />
+
+          {/* Sort direction */}
+          <DropdownMenuRadioGroup
+            value={sortDir}
+            onValueChange={(v) => v !== sortDir && toggleSortDir()}
+          >
+            <DropdownMenuRadioItem value="asc">
+              <ArrowUpIcon />
+              Ascending
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="desc">
+              <ArrowDownIcon />
+              Descending
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Search by title; fills the space between sorting and filters */}
+      <InputGroup className="min-w-40 flex-1">
+        <InputGroupAddon>
+          <SearchIcon />
+        </InputGroupAddon>
+        <InputGroupInput
+          type="search"
+          aria-label="Search tasks"
+          ref={searchRef}
+          aria-keyshortcuts="/"
+          placeholder="Search"
+          value={filters.search}
+          onChange={(e) => handleSearch(e.target.value)}
+        />
+        <InputGroupAddon align="inline-end">
+          <Kbd>/</Kbd>
+        </InputGroupAddon>
+      </InputGroup>
 
       {/* Filtering */}
       <div className="flex flex-row items-center gap-1">
@@ -93,7 +181,10 @@ export function TaskToolbar({
           value={filters.tag}
           onValueChange={(v) => v && updateFilters("tag", v as Filters["tag"])}
         >
-          <SelectTrigger aria-label="Filter by tag">
+          <SelectTrigger
+            aria-label="Filter by tag"
+            className="border-0 dark:bg-transparent"
+          >
             <SelectValue placeholder="Tag">
               {(v: Filters["tag"] | null) =>
                 v && v !== "All" ? <TagBadge tag={v} /> : "All tags"
@@ -118,7 +209,10 @@ export function TaskToolbar({
             v && updateFilters("priority", v as Filters["priority"])
           }
         >
-          <SelectTrigger aria-label="Filter by priority">
+          <SelectTrigger
+            aria-label="Filter by priority"
+            className="border-0 dark:bg-transparent"
+          >
             <SelectValue placeholder="Priority">
               {(v: Filters["priority"] | null) =>
                 v && v !== "All" ? (
@@ -140,6 +234,37 @@ export function TaskToolbar({
           </SelectContent>
         </Select>
 
+        {/* Filter by assignee; only shared lists have assignees */}
+        {members && (
+          <Select
+            value={filters.assignee}
+            onValueChange={(v) => v && updateFilters("assignee", v)}
+          >
+            <SelectTrigger
+              aria-label="Filter by assignee"
+              className="border-0 dark:bg-transparent"
+            >
+              <SelectValue placeholder="Assignee">
+                {(v: string | null) => {
+                  if (v === "Unassigned") return "Unassigned";
+                  const member = members.find((m) => m._id === v);
+                  return member ? <Member member={member} /> : "All assignees";
+                }}
+              </SelectValue>
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="All">All assignees</SelectItem>
+              <SelectItem value="Unassigned">Unassigned</SelectItem>
+              {members.map((m) => (
+                <SelectItem key={m._id} value={m._id}>
+                  <Member member={m} />
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
         {hasActiveFilters && (
           // Reset filters
           <Button
@@ -154,5 +279,14 @@ export function TaskToolbar({
         )}
       </div>
     </div>
+  );
+}
+
+function Member({ member }: { member: ListUser }) {
+  return (
+    <span className="flex min-w-0 items-center gap-1">
+      <UserAvatar displayName={member.displayName} size="xs" />
+      <span className="truncate">{member.displayName}</span>
+    </span>
   );
 }

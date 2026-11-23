@@ -1,4 +1,5 @@
 import { TrashIcon } from "lucide-react";
+import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -15,11 +16,13 @@ import {
 interface TaskDeleteConfirmDialogProps {
   taskTitle: string;
   onConfirm: () => void;
+  className?: string;
 }
 
 export function TaskDeleteConfirmDialog({
   taskTitle,
   onConfirm,
+  className,
 }: TaskDeleteConfirmDialogProps) {
   return (
     <AlertDialog>
@@ -28,8 +31,8 @@ export function TaskDeleteConfirmDialog({
           <Button
             type="button"
             variant="ghost"
-            size="icon"
-            className="hover:text-destructive"
+            size="icon-sm"
+            className={cn("hover:text-destructive", className)}
             aria-label={`Delete "${taskTitle}"`}
           />
         }

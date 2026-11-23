@@ -48,13 +48,34 @@ export function useTasks(listId: string) {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTaskInput }) =>
       tasksApi.updateTask(listId, id, data),
+    // Shows a done toggle right away instead of waiting for the server
+    onMutate: async ({ id, data }) => {
+      if (data.done === undefined) return;
+      const { queryKey } = tasksQueryOptions(listId);
+      // Keeps an in-flight refetch from overwriting the toggle
+      await queryClient.cancelQueries({ queryKey });
+      const previous = queryClient.getQueryData(queryKey);
+      queryClient.setQueryData(queryKey, (tasks) =>
+        tasks?.map((t) => (t._id === id ? { ...t, done: data.done! } : t)),
+      );
+      return { previous };
+    },
     onSuccess: (task, { data }) => {
       // Checking a task off is already visible; other edits happen in a dialog that closes
       const onlyToggledDone = Object.keys(data).join() === "done";
       if (!onlyToggledDone) toast.success(`Saved "${task.title}"`);
       return invalidateTasks();
     },
-    onError: (err) => toast.error(err.message || "Failed to update task"),
+    onError: (err, _, context) => {
+      // Undo the optimistic toggle
+      if (context?.previous) {
+        queryClient.setQueryData(
+          tasksQueryOptions(listId).queryKey,
+          context.previous,
+        );
+      }
+      toast.error(err.message || "Failed to update task");
+    },
   });
 
   const deleteMutation = useMutation({

@@ -1,12 +1,12 @@
-import { useId, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { cn } from "cn";
 import { useForm } from "@tanstack/react-form";
 import type { z } from "zod";
-import { Loader2Icon } from "lucide-react";
+import { ArrowUpIcon, Loader2Icon, XIcon } from "lucide-react";
 import { createTaskSchema, type CreateTaskInput } from "@/schemas/tasks";
 import { TITLE_MAX_LENGTH, type Task } from "@/types/tasks";
 import { Button } from "@/components/ui/button";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
-import { FormField } from "@/components/ui/form-field";
 import { PrioritySelect } from "@/components/priority-select";
 import { TagSelect } from "@/components/tag-select";
 import { AssigneeSelect } from "@/components/assignee-select";
@@ -20,6 +20,10 @@ interface TaskFormProps {
   members?: ListUser[];
   submitLabel?: string;
   onSubmit: (data: CreateTaskInput) => Promise<boolean>;
+  // Shows a cancel button when given
+  onCancel?: () => void;
+  // E.g. a bigger font; applied to the input and its highlight overlay alike
+  titleClassName?: string;
 }
 
 type TaskFormValues = z.input<typeof createTaskSchema>;
@@ -29,10 +33,9 @@ export function TaskForm({
   members,
   submitLabel = "Create",
   onSubmit,
+  onCancel,
+  titleClassName,
 }: TaskFormProps) {
-  // Unique per instance since create and edit forms can coexist
-  const id = useId();
-
   const defaultValues: TaskFormValues = {
     title: task?.title ?? "",
     dueDate: task?.dueDate ? new Date(task.dueDate) : null,
@@ -70,6 +73,16 @@ export function TaskForm({
     },
   });
 
+  // Cancelling the create form discards its draft
+  function handleCancel() {
+    if (!task) {
+      form.reset();
+      lastParsed.current = parseTaskInput("");
+      setDismissed(new Set());
+    }
+    onCancel?.();
+  }
+
   /**
    * Fills the due date, priority, and tag fields from keywords in the title.
    * */
@@ -106,21 +119,19 @@ export function TaskForm({
         }
         form.handleSubmit();
       }}
-      className="flex flex-col gap-4"
+      className="flex flex-col gap-3"
     >
-      {/* Title */}
+      {/* Title; borderless so the form reads as one text box */}
       <form.Field name="title">
         {(field) => {
           // Only the create form parses keywords
           const parsed = task ? null : parse(field.state.value, dismissed);
+          const error = field.state.meta.errors[0]?.message;
           return (
-            <FormField
-              htmlFor={`${id}-title`}
-              label="Title"
-              error={field.state.meta.errors[0]?.message}
-            >
+            <div className="flex flex-col gap-1">
               <HighlightedInput
-                id={`${id}-title`}
+                aria-label="Title"
+                aria-invalid={!!error}
                 matches={parsed?.matches ?? []}
                 placeholder={
                   task
@@ -128,6 +139,11 @@ export function TaskForm({
                     : "e.g. Buy milk tomorrow 5pm #personal !high"
                 }
                 maxLength={TITLE_MAX_LENGTH}
+                className={cn(
+                  "border-transparent bg-transparent px-0 focus-visible:border-transparent focus-visible:ring-0 aria-invalid:border-transparent aria-invalid:ring-0 dark:bg-transparent",
+                  titleClassName,
+                )}
+                overlayClassName={cn("px-0", titleClassName)}
                 value={field.state.value}
                 onBlur={field.handleBlur}
                 onChange={(e) => {
@@ -156,104 +172,103 @@ export function TaskForm({
                   setDismissed(skip);
                   applyParsed(field.state.value, skip);
                 }}
-                autoFocus={!task}
+                autoFocus
               />
-              {/* Preview the title that will be saved once keywords are removed */}
-              {parsed && parsed.title !== field.state.value.trim() && (
-                <p className="text-sm text-muted-foreground">
-                  Saved as &ldquo;{parsed.title}&rdquo;
+              {error && (
+                <p role="alert" className="text-sm text-destructive">
+                  {error}
                 </p>
               )}
-            </FormField>
+            </div>
           );
         }}
       </form.Field>
 
-      <div className="grid grid-cols-2 gap-2 sm:flex">
-        {/* Due date */}
-        <form.Field name="dueDate">
-          {(field) => (
-            <FormField
-              htmlFor={`${id}-dueDate`}
-              label="Due date"
-              error={field.state.meta.errors[0]?.message}
-              className="col-span-2 min-w-0 sm:flex-1"
-            >
+      <div className="flex items-end gap-2">
+        {/* Compact options; wrap onto more lines on small screens */}
+        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+          <form.Field name="dueDate">
+            {(field) => (
               <DateTimePicker
-                id={`${id}-dueDate`}
+                size="sm"
                 selected={field.state.value ?? undefined}
                 onSelect={(date) => field.handleChange(date ?? null)}
-                placeholder="No due date"
-                className="w-full"
+                placeholder="Due date"
+                className="max-w-full border-0 bg-transparent shadow-none dark:bg-transparent"
               />
-            </FormField>
-          )}
-        </form.Field>
+            )}
+          </form.Field>
 
-        {/* Priority */}
-        <form.Field name="priority">
-          {(field) => (
-            <FormField
-              htmlFor={`${id}-priority`}
-              label="Priority"
-              error={field.state.meta.errors[0]?.message}
-            >
-              <PrioritySelect
-                id={`${id}-priority`}
-                value={field.state.value}
-                onValueChange={field.handleChange}
-              />
-            </FormField>
-          )}
-        </form.Field>
-
-        {/* Tag */}
-        <form.Field name="tag">
-          {(field) => (
-            <FormField
-              htmlFor={`${id}-tag`}
-              label="Tag"
-              error={field.state.meta.errors[0]?.message}
-            >
-              <TagSelect
-                id={`${id}-tag`}
-                value={field.state.value}
-                onValueChange={field.handleChange}
-              />
-            </FormField>
-          )}
-        </form.Field>
-
-        {/* Assignee */}
-        {members && (
-          <form.Field name="assignee">
+          <form.Field name="priority">
             {(field) => (
-              <FormField
-                htmlFor={`${id}-assignee`}
-                label="Assignee"
-                error={field.state.meta.errors[0]?.message}
-                className="col-span-2 min-w-0 sm:col-span-1 sm:flex-1"
-              >
+              <PrioritySelect
+                value={field.state.value}
+                onValueChange={field.handleChange}
+              />
+            )}
+          </form.Field>
+
+          <form.Field name="tag">
+            {(field) => (
+              <TagSelect
+                value={field.state.value}
+                onValueChange={field.handleChange}
+              />
+            )}
+          </form.Field>
+
+          {members && (
+            <form.Field name="assignee">
+              {(field) => (
                 <AssigneeSelect
-                  id={`${id}-assignee`}
                   members={members}
                   value={field.state.value}
                   onValueChange={field.handleChange}
                 />
-              </FormField>
-            )}
-          </form.Field>
-        )}
-      </div>
+              )}
+            </form.Field>
+          )}
+        </div>
 
-      <form.Subscribe selector={(state) => state.isSubmitting}>
-        {(isSubmitting) => (
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting && <Loader2Icon className="animate-spin" />}
-            {submitLabel}
-          </Button>
-        )}
-      </form.Subscribe>
+        <div className="flex shrink-0 items-center gap-1">
+          {onCancel && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Cancel"
+              onClick={handleCancel}
+            >
+              <XIcon />
+            </Button>
+          )}
+          <form.Subscribe selector={(state) => state.isSubmitting}>
+            {(isSubmitting) =>
+              // Editing gets a labeled save button; creating gets a send button
+              task ? (
+                <Button type="submit" size="sm" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2Icon className="animate-spin" />}
+                  {submitLabel}
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  size="icon-sm"
+                  aria-label={submitLabel}
+                  title={submitLabel}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <Loader2Icon className="animate-spin" />
+                  ) : (
+                    <ArrowUpIcon />
+                  )}
+                </Button>
+              )
+            }
+          </form.Subscribe>
+        </div>
+      </div>
     </form>
   );
 }

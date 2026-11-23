@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { PlusIcon } from "lucide-react";
 import type { CreateListInput } from "@/schemas/lists";
-import { Button } from "@/components/ui/button";
+import { SidebarGroupAction } from "@/components/ui/sidebar";
 import { ListNameForm } from "@/components/list-name-form";
 import {
   Dialog,
@@ -22,15 +22,7 @@ export function NewListDialog({ onSubmit }: NewListDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
-        render={
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-label="New list"
-            title="New list"
-          />
-        }
+        render={<SidebarGroupAction aria-label="New list" title="New list" />}
       >
         <PlusIcon />
       </DialogTrigger>

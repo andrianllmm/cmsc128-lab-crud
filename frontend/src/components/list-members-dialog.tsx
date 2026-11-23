@@ -1,6 +1,6 @@
 import { useForm } from "@tanstack/react-form";
 import type { z } from "zod";
-import { Loader2Icon, UsersIcon } from "lucide-react";
+import { Loader2Icon } from "lucide-react";
 import { addMemberSchema, type AddMemberInput } from "@/schemas/lists";
 import type { List, ListUser } from "@/types/lists";
 import { Badge } from "@/components/ui/badge";
@@ -14,36 +14,25 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 
 interface ListMembersDialogProps {
   list: List;
   isOwner: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onAddMember: (data: AddMemberInput) => Promise<void>;
 }
 
 export function ListMembersDialog({
   list,
   isOwner,
+  open,
+  onOpenChange,
   onAddMember,
 }: ListMembersDialogProps) {
   return (
-    <Dialog>
-      <DialogTrigger
-        render={
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-label="Members"
-            title="Members"
-          />
-        }
-      >
-        <UsersIcon />
-      </DialogTrigger>
-
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="min-w-0 wrap-anywhere">
