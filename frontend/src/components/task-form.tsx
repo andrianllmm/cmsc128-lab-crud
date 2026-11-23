@@ -165,7 +165,7 @@ export function TaskForm({
                   setDismissed(skip);
                   applyParsed(field.state.value, skip);
                 }}
-                autoFocus={!task}
+                autoFocus
               />
               {error && (
                 <p role="alert" className="text-sm text-destructive">

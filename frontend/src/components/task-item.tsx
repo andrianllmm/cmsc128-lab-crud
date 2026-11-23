@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { isPast } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, PencilIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { formatDueDate } from "@/lib/dates";
 import type { UpdateTaskInput } from "@/schemas/tasks";
 import type { ListUser } from "@/types/lists";
@@ -38,6 +39,8 @@ export function TaskItem({
   members,
 }: TaskItemProps) {
   const [open, setOpen] = useState(false);
+  // Edits in place of the row instead of in the dialog
+  const [editing, setEditing] = useState(false);
   // Updates optimistically, so there's nothing to wait for
   function toggleDone(done: boolean) {
     void onEdit(task._id, { done });
@@ -51,65 +54,100 @@ export function TaskItem({
           aria-label={task.done ? "Mark as not done" : "Mark as done"}
           checked={task.done}
           onCheckedChange={(checked) => toggleDone(checked === true)}
-          className="relative z-10 mt-0.5 size-4.5 rounded-full"
+          className={cn(
+            "relative z-10 mt-0.5 size-4.5 rounded-full",
+            // Lines up with the taller title input
+            editing && "mt-2",
+          )}
         />
 
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          {/* Title; its overlay makes the whole row open the edit dialog */}
-          <button
-            type="button"
-            aria-haspopup="dialog"
-            onClick={() => setOpen(true)}
-            className={cn(
-              "min-w-0 cursor-pointer text-left text-sm wrap-anywhere outline-none after:absolute after:inset-0 after:rounded-lg focus-visible:after:ring-2 focus-visible:after:ring-ring/50",
-              task.done && "text-muted-foreground line-through",
-            )}
-          >
-            {task.title}
-          </button>
-
-          {/* Hidden when there's no details to show */}
-          <div className="flex flex-wrap items-center gap-2 text-xs empty:hidden">
-            {/* Due date */}
-            {task.dueDate && (
-              <span
+        {editing ? (
+          <div className="min-w-0 flex-1">
+            <TaskForm
+              task={task}
+              members={members}
+              submitLabel="Save"
+              onCancel={() => setEditing(false)}
+              onSubmit={async (data) => {
+                const ok = await onEdit(task._id, data);
+                if (ok) setEditing(false);
+                return ok;
+              }}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              {/* Title; its overlay makes the whole row open the edit dialog */}
+              <button
+                type="button"
+                aria-haspopup="dialog"
+                onClick={() => setOpen(true)}
                 className={cn(
-                  "flex items-center gap-1 text-muted-foreground",
-                  // Overdue if past due and not done
-                  !task.done &&
-                    isPast(new Date(task.dueDate)) &&
-                    "text-destructive",
+                  "min-w-0 cursor-pointer text-left text-sm wrap-anywhere outline-none after:absolute after:inset-0 after:rounded-lg focus-visible:after:ring-2 focus-visible:after:ring-ring/50",
+                  task.done && "text-muted-foreground line-through",
                 )}
               >
-                <CalendarIcon className="size-3.5" aria-hidden />
-                {formatDueDate(new Date(task.dueDate))}
-              </span>
-            )}
+                {task.title}
+              </button>
 
-            {/* Priority; hidden if default */}
-            {task.priority !== "None" && (
-              <PriorityBadge priority={task.priority} />
-            )}
+              {/* Hidden when there's no details to show */}
+              <div className="flex flex-wrap items-center gap-2 text-xs empty:hidden">
+                {/* Due date */}
+                {task.dueDate && (
+                  <span
+                    className={cn(
+                      "flex items-center gap-1 text-muted-foreground",
+                      // Overdue if past due and not done
+                      !task.done &&
+                        isPast(new Date(task.dueDate)) &&
+                        "text-destructive",
+                    )}
+                  >
+                    <CalendarIcon className="size-3.5" aria-hidden />
+                    {formatDueDate(new Date(task.dueDate))}
+                  </span>
+                )}
 
-            {/* Tag; hidden if default */}
-            {task.tag !== "Others" && <TagBadge tag={task.tag} />}
+                {/* Priority; hidden if default */}
+                {task.priority !== "None" && (
+                  <PriorityBadge priority={task.priority} />
+                )}
 
-            {/* Assignee */}
-            {task.assignee && (
-              <span className="flex items-center gap-1 text-muted-foreground">
-                <UserAvatar displayName={task.assignee.displayName} size="xs" />
-                {task.assignee.displayName}
-              </span>
-            )}
-          </div>
-        </div>
+                {/* Tag; hidden if default */}
+                {task.tag !== "Others" && <TagBadge tag={task.tag} />}
 
-        {/* Delete button; shown on hover where there's a pointer */}
-        <TaskDeleteConfirmDialog
-          taskTitle={task.title}
-          onConfirm={() => onDelete(task._id)}
-          className="relative z-10 -my-1 group-focus-within:opacity-100 group-hover:opacity-100 md:opacity-0"
-        />
+                {/* Assignee */}
+                {task.assignee && (
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    <UserAvatar
+                      displayName={task.assignee.displayName}
+                      size="xs"
+                    />
+                    {task.assignee.displayName}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Edit and delete buttons; shown on hover where there's a pointer */}
+            <div className="relative z-10 -my-1 flex items-center group-focus-within:opacity-100 group-hover:opacity-100 md:opacity-0">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={`Edit "${task.title}"`}
+                onClick={() => setEditing(true)}
+              >
+                <PencilIcon />
+              </Button>
+              <TaskDeleteConfirmDialog
+                taskTitle={task.title}
+                onConfirm={() => onDelete(task._id)}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       {/* Edit task dialog; kept outside the row so the delete dialog isn't nested in it */}
