@@ -6,14 +6,15 @@ A to-do list app built with the MERN stack.
 
 ### Task Management
 
-- Task list showing title, due date, priority, and tag for every task.
-- Add tasks with title, due date and time, priority, and tag.
+- Task list of minimal rows showing title, due date, priority (colored flag), tag (colored `#tag`), and assignee.
+- Add tasks from a quick-add dialog, opened by the sidebar's Add task button, the floating `+` button, or `Q`. It is one text box with compact due date, priority, tag, and assignee pickers below it. Closing it by accident keeps the draft; the `×` button discards it.
 - Type a task in plain language, like `Buy milk tomorrow 5pm #personal !high`: the date phrase, `#tag`, `!priority`, and `@member` in shared lists (or plain words like `urgent`, `asap`, `high priority`, `p1`) are highlighted in the title and fill in the form fields, which can be corrected before saving (`frontend/src/lib/parse-task.ts`).
-- Edit any field of a task.
+- Edit a task inline from its row (pen button), or click it to open a details view where every field can be edited and saved.
 - Delete tasks behind a confirmation dialog.
 - Undo a delete within 5 seconds via a toast; the task is only removed from the database once the toast closes (`frontend/src/hooks/useTasks.ts`).
-- Mark tasks as done, shown with a checkbox and strikethrough.
-- Sort by date added, due date, priority, or tag (ascending or descending), and filter by tag and priority, client-side (`frontend/src/hooks/useTaskView.ts`).
+- Mark tasks as done with a round checkbox and strikethrough. The checkbox updates instantly and rolls back if the save fails.
+- Sort by date added, due date, priority, or tag (ascending or descending) from a sort menu. Search by title and filter by tag, priority, and assignee, client-side (`frontend/src/hooks/useTaskView.ts`). Typing `#tag`, `!priority`, or `@member` in the search sets that filter.
+- Keyboard shortcuts: `Q` adds a task, `/` focuses the search, and `Ctrl/⌘+B` toggles the sidebar.
 - Tasks persist in MongoDB across browser refreshes and server restarts.
 
 ### Lists
@@ -22,7 +23,7 @@ A to-do list app built with the MERN stack.
 - Create, rename, and delete collaborative lists.
 - Assign tasks in shared lists to a member (the backend rejects anyone outside the list).
 - Add users to a list by email.
-- Switch between your lists and lists you were added to.
+- Switch between your lists and lists you were added to from the sidebar, which also holds each list's members, rename, and delete actions and the account menu.
 - Shared lists show who created each task.
 
 ### Accounts
@@ -416,6 +417,21 @@ Tasks store only `owner` and `list` IDs, and the creator's name comes from `popu
 - Owner-only checks moved from controllers into the `requireListOwner` middleware.
 - Renames for clarity (e.g. `getListById` → `findAccessibleList`), removed unused types, and logs now go through `lib/logger.ts`.
 - `console.log` is used only in the seed script, which is a command-line tool.
+
+### UI Overhaul
+
+The UI was reworked after Todoist, mostly with shadcn/ui components, without changing what the app does.
+
+| Change          | Before                                                | After                                                                       |
+| --------------- | ----------------------------------------------------- | --------------------------------------------------------------------------- |
+| Navigation      | List switcher select and icon buttons above the tasks | shadcn sidebar with the account menu, Add task, and lists                   |
+| List actions    | Separate members, options, and new list buttons       | One `⋯` menu per list in the sidebar, `+` beside "My lists"                 |
+| Adding tasks    | Form always shown above the list                      | Quick-add dialog from the sidebar, a floating `+`, or `Q`                   |
+| Task form       | Labeled fields in a grid                              | One borderless text box with compact pickers and a send button              |
+| Task items      | Cards with badges                                     | Divided rows, round checkboxes, colored flags and `#tags`                   |
+| Editing         | Edit dialog only                                      | Inline editing from a pen button, and a larger task details dialog          |
+| Sort and filter | Sort select and direction button                      | Sort menu, title search, and an assignee filter                             |
+| Marking done    | Checkbox waited for the server                        | Optimistic update with rollback on error (`frontend/src/hooks/useTasks.ts`) |
 
 ### UBAC Kept Intact
 
