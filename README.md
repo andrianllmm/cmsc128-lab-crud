@@ -8,7 +8,7 @@ A to-do list app built with the MERN stack.
 
 - Task list showing title, due date, priority, and tag for every task.
 - Add tasks with title, due date and time, priority, and tag.
-- Type a task in plain language, like `Buy milk tomorrow 5pm #personal !high`: the date phrase, `#tag`, and `!priority` are highlighted in the title and fill in the form fields, which can be corrected before saving (`frontend/src/lib/parse-task.ts`).
+- Type a task in plain language, like `Buy milk tomorrow 5pm #personal !high`: the date phrase, `#tag`, and `!priority` (or plain words like `urgent`, `asap`, `high priority`, `p1`) are highlighted in the title and fill in the form fields, which can be corrected before saving (`frontend/src/lib/parse-task.ts`).
 - Edit any field of a task.
 - Delete tasks behind a confirmation dialog.
 - Undo a delete within 5 seconds via a toast; the task is only removed from the database once the toast closes (`frontend/src/hooks/useTasks.ts`).

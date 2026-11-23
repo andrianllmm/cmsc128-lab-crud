@@ -19,24 +19,56 @@ export interface ParsedTask {
   matches: TaskMatch[];
 }
 
+// Lowercased word or phrase -> value, e.g. "high" -> "High"
+type Lookup<T> = Record<string, T>;
+
+function toLookup<T extends string>(options: readonly T[]) {
+  return Object.fromEntries(
+    options.map((option) => [option.toLowerCase(), option]),
+  ) as Lookup<T>;
+}
+
+// Written out after "!" or on their own, e.g. "urgent" or "high priority"
+const PRIORITY_SYNONYMS: Lookup<Priority> = {
+  urgent: "High",
+  asap: "High",
+  p1: "High",
+  "high priority": "High",
+  p2: "Medium",
+  "medium priority": "Medium",
+  p3: "Low",
+  "low priority": "Low",
+};
+
+// Only after "#", since plain words like "office" are too common in titles
+const TAG_SYNONYMS: Lookup<Tag> = {
+  office: "Work",
+  homework: "School",
+  class: "School",
+  errand: "Personal",
+};
+
+const PRIORITY_NAMES = { ...toLookup(PRIORITIES), ...PRIORITY_SYNONYMS };
+const TAG_NAMES = { ...toLookup(TAGS), ...TAG_SYNONYMS };
+
+// Whole synonyms anywhere in the text, longest first so "high priority"
+// isn't cut short by a shorter synonym
+const PLAIN_PRIORITY = `\\b(${Object.keys(PRIORITY_SYNONYMS)
+  .sort((a, b) => b.length - a.length)
+  .join("|")})\\b`;
+
 /**
- * Finds the first `<symbol><word>` whose word is one of `options`,
- * ignoring case, e.g. "#personal" for tags.
+ * Finds the first match of `pattern` (whose first group is the keyword)
+ * that `lookup` knows and the user hasn't dismissed.
  * */
-function findOption<T extends string>(
+function findKeyword<T>(
   text: string,
-  symbol: "#" | "!",
-  options: readonly T[],
+  pattern: string,
+  lookup: Lookup<T>,
   dismissed: ReadonlySet<string>,
 ) {
-  // A symbol followed by one or more letters, digits, or underscores,
-  // e.g. "#work" or "!high"; "g" finds every occurrence
-  const pattern = new RegExp(`\\${symbol}(\\w+)`, "g");
-
-  for (const match of text.matchAll(pattern)) {
-    const value = options.find(
-      (option) => option.toLowerCase() === match[1].toLowerCase(),
-    );
+  for (const match of text.matchAll(new RegExp(pattern, "gi"))) {
+    const value = lookup[match[1].toLowerCase()];
     if (value && !dismissed.has(match[0].toLowerCase())) {
       return { value, start: match.index, end: match.index + match[0].length };
     }
@@ -77,10 +109,13 @@ export function parseTaskInput(
     });
   }
 
-  const tag = findOption(text, "#", TAGS, dismissed);
+  const tag = findKeyword(text, "#(\\w+)", TAG_NAMES, dismissed);
   if (tag) matches.push({ kind: "tag", ...range(text, tag) });
 
-  const priority = findOption(text, "!", PRIORITIES, dismissed);
+  // "!high" is checked first, then plain words like "urgent"
+  const priority =
+    findKeyword(text, "!(\\w+)", PRIORITY_NAMES, dismissed) ??
+    findKeyword(text, PLAIN_PRIORITY, PRIORITY_SYNONYMS, dismissed);
   if (priority) matches.push({ kind: "priority", ...range(text, priority) });
 
   // Sort so the title and highlights can be built left to right
