@@ -226,21 +226,29 @@ export function TaskForm({
             </Button>
           )}
           <form.Subscribe selector={(state) => state.isSubmitting}>
-            {(isSubmitting) => (
-              <Button
-                type="submit"
-                size="icon-sm"
-                aria-label={submitLabel}
-                title={submitLabel}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <Loader2Icon className="animate-spin" />
-                ) : (
-                  <ArrowUpIcon />
-                )}
-              </Button>
-            )}
+            {(isSubmitting) =>
+              // Editing gets a labeled save button; creating gets a send button
+              task ? (
+                <Button type="submit" size="sm" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2Icon className="animate-spin" />}
+                  {submitLabel}
+                </Button>
+              ) : (
+                <Button
+                  type="submit"
+                  size="icon-sm"
+                  aria-label={submitLabel}
+                  title={submitLabel}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <Loader2Icon className="animate-spin" />
+                  ) : (
+                    <ArrowUpIcon />
+                  )}
+                </Button>
+              )
+            }
           </form.Subscribe>
         </div>
       </div>
