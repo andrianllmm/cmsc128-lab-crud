@@ -480,5 +480,5 @@ The merge had no Git conflicts, since `main` didn't change after `act2-accounts`
 ### Task Management
 
 ![Task list](docs/images/tasks-list.png)
-![Editing a task](docs/images/tasks-edit.png)
+![Task details](docs/images/tasks-edit.png)
 ![Deleting a task](docs/images/tasks-delete.png)
