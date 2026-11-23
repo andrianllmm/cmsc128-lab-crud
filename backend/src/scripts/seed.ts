@@ -49,21 +49,21 @@ const SHARED_TASKS = [
     title: "Design the database schema",
     assignee: 0,
     priority: "High",
-    tag: "Backend",
+    tag: "School",
     dueDate: daysFromNow(3),
   },
   {
     title: "Build the task list UI",
     assignee: 1,
     priority: "High",
-    tag: "Frontend",
+    tag: "School",
     dueDate: daysFromNow(4),
   },
   {
     title: "Write API tests",
     assignee: 2,
     priority: "Medium",
-    tag: "Backend",
+    tag: "School",
     dueDate: daysFromNow(6),
   },
   {
@@ -73,8 +73,8 @@ const SHARED_TASKS = [
     tag: "School",
     dueDate: daysFromNow(-1),
   },
-  { title: "Fix login redirect bug", assignee: 0, done: true, tag: "Frontend" },
-  { title: "Update the README", tag: "Docs" },
+  { title: "Fix login redirect bug", assignee: 0, done: true, tag: "School" },
+  { title: "Update the README", tag: "School" },
   { title: "Plan the presentation schedule" },
 ];
 
