@@ -418,21 +418,6 @@ Tasks store only `owner` and `list` IDs, and the creator's name comes from `popu
 - Renames for clarity (e.g. `getListById` → `findAccessibleList`), removed unused types, and logs now go through `lib/logger.ts`.
 - `console.log` is used only in the seed script, which is a command-line tool.
 
-### UI Overhaul
-
-The UI was reworked after Todoist, mostly with shadcn/ui components, without changing what the app does.
-
-| Change          | Before                                                | After                                                                       |
-| --------------- | ----------------------------------------------------- | --------------------------------------------------------------------------- |
-| Navigation      | List switcher select and icon buttons above the tasks | shadcn sidebar with the account menu, Add task, and lists                   |
-| List actions    | Separate members, options, and new list buttons       | One `⋯` menu per list in the sidebar, `+` beside "My lists"                 |
-| Adding tasks    | Form always shown above the list                      | Quick-add dialog from the sidebar, a floating `+`, or `Q`                   |
-| Task form       | Labeled fields in a grid                              | One borderless text box with compact pickers and a send button              |
-| Task items      | Cards with badges                                     | Divided rows, round checkboxes, colored flags and `#tags`                   |
-| Editing         | Edit dialog only                                      | Inline editing from a pen button, and a larger task details dialog          |
-| Sort and filter | Sort select and direction button                      | Sort menu, title search, and an assignee filter                             |
-| Marking done    | Checkbox waited for the server                        | Optimistic update with rollback on error (`frontend/src/hooks/useTasks.ts`) |
-
 ### UBAC Kept Intact
 
 - Integration tests in `backend/src/test/ubac.test.ts` cover the IDOR cases (other users' lists, tasks, and owner actions).
@@ -448,15 +433,20 @@ The UI was reworked after Todoist, mostly with shadcn/ui components, without cha
 | `.env` files gitignored, secret scan in CI             | Leaked credentials                                   |
 | `trust proxy` in production                            | `secure` cookies and rate limits behind a host proxy |
 
-### UX/UI (HCI Heuristics)
+### UX/UI
 
-| Heuristic                   | Changes                                                                                                       |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| Visibility of system status | Loading states, progress on list delete, success toasts, page titles in tabs                                  |
-| Error recovery              | Inline form errors from the API, a friendly error page with retry, task retry, "server unreachable" message   |
-| No dead ends                | 404 page, empty-state hints, a sign-up link on the login page                                                 |
-| Accessibility               | Higher contrast for badges, errors, and checkboxes; skip-to-content link; navigation buttons exposed as links |
-| Responsive                  | Tall dialogs scroll and the date picker stays on screen on phones                                             |
+The UI was reworked after Todoist, mostly with shadcn/ui components, without changing what the app does.
+
+- A sidebar holds the account menu, an Add task button, and your lists, each with a `⋯` menu for members, rename, and delete.
+- Tasks are added from a quick-add dialog (sidebar, floating `+`, or `Q`): one text box with small date, priority, tag, and assignee pickers. Closing it by accident keeps the draft.
+- Tasks are plain rows with round checkboxes, colored priority flags, and colored `#tags`. They can be edited inline or opened in a details dialog.
+- Sorting moved into a menu, and the toolbar gained a title search (`/`) and an assignee filter.
+- Checking a task off updates instantly and rolls back if the save fails.
+- Loading states, success toasts, progress on list delete, and page titles in tabs show what the app is doing.
+- API errors show inline in forms, failed loads can be retried, and there's a friendly error page and a "server unreachable" message.
+- There are no dead ends: a 404 page, empty-state hints, and a sign-up link on the login page.
+- Badges, errors, and checkboxes have higher contrast, there's a skip-to-content link, and navigation buttons are real links.
+- Dialogs scroll when tall and the date picker stays on screen on phones.
 
 ## Merging Activities 1 and 2
 
