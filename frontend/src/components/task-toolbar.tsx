@@ -16,6 +16,7 @@ import { PRIORITIES, TAGS } from "@/types/tasks";
 import type { ListUser } from "@/types/lists";
 import { UserAvatar } from "@/components/user-avatar";
 import { useHotkey } from "@/hooks/useHotkey";
+import { parseTaskInput } from "@/lib/parse-task";
 import { PriorityBadge } from "@/components/priority-badge";
 import { TagBadge } from "@/components/tag-badge";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,28 @@ export function TaskToolbar({
   // "/" jumps to the search box
   const searchRef = useRef<HTMLInputElement>(null);
   useHotkey("/", () => searchRef.current?.focus());
+
+  // Moves "#tag", "!priority", and "@name" into their filters, like the task
+  // form does; dates and plain words stay searchable
+  function handleSearch(text: string) {
+    const parsed = parseTaskInput(text, undefined, members);
+    let search = text;
+    // Right to left so earlier positions stay valid while cutting
+    for (const match of [...parsed.matches].reverse()) {
+      if (!"#!@".includes(text[match.start])) continue;
+      if (match.kind === "tag" && parsed.tag) updateFilters("tag", parsed.tag);
+      if (match.kind === "priority" && parsed.priority) {
+        updateFilters("priority", parsed.priority);
+      }
+      if (match.kind === "assignee" && parsed.assignee) {
+        updateFilters("assignee", parsed.assignee);
+      }
+      search = (search.slice(0, match.start) + search.slice(match.end))
+        .replace(/\s{2,}/g, " ")
+        .trimStart();
+    }
+    updateFilters("search", search);
+  }
 
   return (
     <div className="flex flex-row flex-wrap items-center justify-between gap-2">
@@ -144,7 +167,7 @@ export function TaskToolbar({
           aria-keyshortcuts="/"
           placeholder="Search"
           value={filters.search}
-          onChange={(e) => updateFilters("search", e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
         />
         <InputGroupAddon align="inline-end">
           <Kbd>/</Kbd>
