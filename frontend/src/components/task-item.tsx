@@ -37,13 +37,9 @@ export function TaskItem({
   members,
 }: TaskItemProps) {
   const [open, setOpen] = useState(false);
-  // Disables the checkbox while its update is saving
-  const [toggling, setToggling] = useState(false);
-
-  async function toggleDone(done: boolean) {
-    setToggling(true);
-    await onEdit(task._id, { done });
-    setToggling(false);
+  // Updates optimistically, so there's nothing to wait for
+  function toggleDone(done: boolean) {
+    void onEdit(task._id, { done });
   }
 
   return (
@@ -53,7 +49,6 @@ export function TaskItem({
         <Checkbox
           aria-label={task.done ? "Mark as not done" : "Mark as done"}
           checked={task.done}
-          disabled={toggling}
           onCheckedChange={(checked) => toggleDone(checked === true)}
           className="relative z-10 mt-0.5 size-4.5 rounded-full"
         />
