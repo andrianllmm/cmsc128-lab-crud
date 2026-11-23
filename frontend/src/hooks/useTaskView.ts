@@ -23,6 +23,8 @@ export type SortDir = (typeof SORT_DIRECTIONS)[number];
 
 // Filter options
 export type Filters = {
+  // Matched against titles, ignoring case
+  search: string;
   tag: Tag | "All";
   priority: Priority | "All";
   // An assignee's id, or "Unassigned"
@@ -30,6 +32,7 @@ export type Filters = {
 };
 
 export const DEFAULT_FILTERS: Filters = {
+  search: "",
   tag: "All",
   priority: "All",
   assignee: "All",
@@ -66,6 +69,7 @@ export function useTaskView(tasks: Task[]) {
 
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const hasActiveFilters =
+    filters.search.trim() !== "" ||
     filters.tag !== "All" ||
     filters.priority !== "All" ||
     filters.assignee !== "All";
@@ -91,8 +95,9 @@ export function useTaskView(tasks: Task[]) {
   return {
     visibleTasks: tasks
       .filter((task) => {
-        const { tag, priority, assignee } = filters;
+        const { search, tag, priority, assignee } = filters;
         return (
+          task.title.toLowerCase().includes(search.trim().toLowerCase()) &&
           (tag === "All" || task.tag === tag) &&
           (priority === "All" || task.priority === priority) &&
           (assignee === "All" ||

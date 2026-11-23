@@ -2,6 +2,7 @@ import {
   ArrowDownIcon,
   ArrowUpDownIcon,
   ArrowUpIcon,
+  SearchIcon,
   XIcon,
 } from "lucide-react";
 import {
@@ -16,6 +17,11 @@ import { UserAvatar } from "@/components/user-avatar";
 import { PriorityBadge } from "@/components/priority-badge";
 import { TagBadge } from "@/components/tag-badge";
 import { Button } from "@/components/ui/button";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -118,6 +124,20 @@ export function TaskToolbar({
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {/* Search by title; fills the space between sorting and filters */}
+      <InputGroup className="min-w-40 flex-1">
+        <InputGroupAddon>
+          <SearchIcon />
+        </InputGroupAddon>
+        <InputGroupInput
+          type="search"
+          aria-label="Search tasks"
+          placeholder="Search"
+          value={filters.search}
+          onChange={(e) => updateFilters("search", e.target.value)}
+        />
+      </InputGroup>
 
       {/* Filtering */}
       <div className="flex flex-row items-center gap-1">
