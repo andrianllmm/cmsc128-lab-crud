@@ -8,7 +8,7 @@ A to-do list app built with the MERN stack.
 
 - Task list showing title, due date, priority, and tag for every task.
 - Add tasks with title, due date and time, priority, and tag.
-- Type a task in plain language, like `Buy milk tomorrow 5pm #personal !high`: the date phrase, `#tag`, and `!priority` (or plain words like `urgent`, `asap`, `high priority`, `p1`) are highlighted in the title and fill in the form fields, which can be corrected before saving (`frontend/src/lib/parse-task.ts`).
+- Type a task in plain language, like `Buy milk tomorrow 5pm #personal !high`: the date phrase, `#tag`, `!priority`, and `@member` in shared lists (or plain words like `urgent`, `asap`, `high priority`, `p1`) are highlighted in the title and fill in the form fields, which can be corrected before saving (`frontend/src/lib/parse-task.ts`).
 - Edit any field of a task.
 - Delete tasks behind a confirmation dialog.
 - Undo a delete within 5 seconds via a toast; the task is only removed from the database once the toast closes (`frontend/src/hooks/useTasks.ts`).
@@ -20,6 +20,7 @@ A to-do list app built with the MERN stack.
 
 - Each account gets a Personal list on registration.
 - Create, rename, and delete collaborative lists.
+- Assign tasks in shared lists to a member (the backend rejects anyone outside the list).
 - Add users to a list by email.
 - Switch between your lists and lists you were added to.
 - Shared lists show who created each task.
@@ -250,18 +251,19 @@ erDiagram
 
 ### Task
 
-| Field       | Type     | Notes                                               |
-| ----------- | -------- | --------------------------------------------------- |
-| `_id`       | ObjectId | assigned by MongoDB, used to identify each task     |
-| `list`      | ObjectId | ref `List`                                          |
-| `owner`     | ObjectId | ref `User`, who created the task                    |
-| `title`     | String   | required                                            |
-| `dueDate`   | Date     | optional                                            |
-| `priority`  | String   | `Low`, `Medium`, `High`, or `None` (default)        |
-| `tag`       | String   | `Work`, `School`, `Personal`, or `Others` (default) |
-| `done`      | Boolean  | defaults to `false`                                 |
-| `createdAt` | Date     | set automatically by Mongoose timestamps            |
-| `updatedAt` | Date     | set automatically by Mongoose timestamps            |
+| Field       | Type     | Notes                                                      |
+| ----------- | -------- | ---------------------------------------------------------- |
+| `_id`       | ObjectId | assigned by MongoDB, used to identify each task            |
+| `list`      | ObjectId | ref `List`                                                 |
+| `owner`     | ObjectId | ref `User`, who created the task                           |
+| `assignee`  | ObjectId | ref `User`, optional, must be the list's owner or a member |
+| `title`     | String   | required                                                   |
+| `dueDate`   | Date     | optional                                                   |
+| `priority`  | String   | `Low`, `Medium`, `High`, or `None` (default)               |
+| `tag`       | String   | `Work`, `School`, `Personal`, or `Others` (default)        |
+| `done`      | Boolean  | defaults to `false`                                        |
+| `createdAt` | Date     | set automatically by Mongoose timestamps                   |
+| `updatedAt` | Date     | set automatically by Mongoose timestamps                   |
 
 ## API Endpoints
 
@@ -296,7 +298,8 @@ Example create request body:
   "title": "Finish lab report",
   "dueDate": "2026-09-15T23:59:00.000Z",
   "priority": "High",
-  "tag": "School"
+  "tag": "School",
+  "assignee": "<id of a list member, or null>"
 }
 ```
 

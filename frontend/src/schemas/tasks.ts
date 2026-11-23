@@ -17,6 +17,8 @@ export const createTaskSchema = z.object({
     z.enum(PRIORITIES, { error: "Select a valid priority" }),
   ),
   tag: z.exactOptional(z.enum(TAGS, { error: "Select a valid tag" })),
+  // A list member's id; `null` unassigns
+  assignee: z.exactOptional(z.string().nullable()),
 });
 
 export const updateTaskSchema = createTaskSchema.partial().extend({

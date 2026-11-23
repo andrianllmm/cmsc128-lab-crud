@@ -7,6 +7,7 @@ const MATCH_COLORS: Record<TaskMatch["kind"], string> = {
   date: "bg-blue-500/15 text-blue-700 dark:text-blue-400",
   tag: "bg-violet-500/15 text-violet-700 dark:text-violet-400",
   priority: "bg-amber-500/15 text-amber-700 dark:text-amber-400",
+  assignee: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400",
 };
 
 interface HighlightedInputProps extends React.ComponentProps<"input"> {

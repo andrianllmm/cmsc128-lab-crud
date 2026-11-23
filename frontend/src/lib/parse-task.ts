@@ -1,9 +1,10 @@
 import * as chrono from "chrono-node";
 import { endOfDay } from "date-fns";
+import type { ListUser } from "@/types/lists";
 import { PRIORITIES, TAGS, type Priority, type Tag } from "@/types/tasks";
 
 export interface TaskMatch {
-  kind: "date" | "tag" | "priority";
+  kind: "date" | "tag" | "priority" | "assignee";
   start: number;
   end: number;
   // Lowercased matched text, so a dismissal can be matched against it
@@ -15,6 +16,8 @@ export interface ParsedTask {
   dueDate?: Date;
   priority?: Priority;
   tag?: Tag;
+  // Id of the list member mentioned with "@"
+  assignee?: string;
   // Where each keyword sits in the original text, for highlighting
   matches: TaskMatch[];
 }
@@ -58,6 +61,25 @@ const PLAIN_PRIORITY = `\\b(${Object.keys(PRIORITY_SYNONYMS)
   .join("|")})\\b`;
 
 /**
+ * Maps what can follow "@" to a member's id: their first name or their whole
+ * name without spaces ("@juan", "@juandelacruz"). Names shared by several
+ * members are left out, since "@juan" couldn't tell them apart.
+ * */
+function toMemberLookup(members: ListUser[]): Lookup<string> {
+  const ids = new Map<string, string | null>();
+  for (const { _id, displayName } of members) {
+    const name = displayName.toLowerCase();
+    for (const key of [name.split(/\s+/)[0], name.replace(/\s+/g, "")]) {
+      // `null` marks a name that more than one member has
+      ids.set(key, ids.has(key) && ids.get(key) !== _id ? null : _id);
+    }
+  }
+  const lookup: Lookup<string> = {};
+  for (const [key, id] of ids) if (id) lookup[key] = id;
+  return lookup;
+}
+
+/**
  * Finds the first match of `pattern` (whose first group is the keyword)
  * that `lookup` knows and the user hasn't dismissed.
  * */
@@ -84,10 +106,12 @@ function range(text: string, { start, end }: { start: number; end: number }) {
  * Parses input like "Buy milk tomorrow 5pm #personal !high" into a title,
  * due date, tag, and priority. Unrecognized keywords, and ones in `dismissed`
  * (lowercased text the user turned back into plain text), stay in the title.
+ * `members` are who "@name" can assign the task to; leave empty to not parse it.
  * */
 export function parseTaskInput(
   text: string,
   dismissed: ReadonlySet<string> = new Set(),
+  members: ListUser[] = [],
 ): ParsedTask {
   const matches: TaskMatch[] = [];
   let dueDate: Date | undefined;
@@ -118,6 +142,14 @@ export function parseTaskInput(
     findKeyword(text, PLAIN_PRIORITY, PRIORITY_SYNONYMS, dismissed);
   if (priority) matches.push({ kind: "priority", ...range(text, priority) });
 
+  const assignee = findKeyword(
+    text,
+    "@(\\w+)",
+    toMemberLookup(members),
+    dismissed,
+  );
+  if (assignee) matches.push({ kind: "assignee", ...range(text, assignee) });
+
   // Sort so the title and highlights can be built left to right
   matches.sort((a, b) => a.start - b.start);
 
@@ -135,6 +167,7 @@ export function parseTaskInput(
     dueDate,
     priority: priority?.value,
     tag: tag?.value,
+    assignee: assignee?.value,
     matches,
   };
 }
