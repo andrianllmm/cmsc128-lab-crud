@@ -69,6 +69,7 @@ function TasksPage() {
           updateFilters={updateFilters}
           resetFilters={resetFilters}
           hasActiveFilters={hasActiveFilters}
+          members={members}
         />
 
         <TaskList

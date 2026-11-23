@@ -25,11 +25,14 @@ export type SortDir = (typeof SORT_DIRECTIONS)[number];
 export type Filters = {
   tag: Tag | "All";
   priority: Priority | "All";
+  // An assignee's id, or "Unassigned"
+  assignee: string | "All" | "Unassigned";
 };
 
 export const DEFAULT_FILTERS: Filters = {
   tag: "All",
   priority: "All",
+  assignee: "All",
 };
 
 // Task comparison function for sorting
@@ -62,7 +65,10 @@ export function useTaskView(tasks: Task[]) {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
-  const hasActiveFilters = filters.tag !== "All" || filters.priority !== "All";
+  const hasActiveFilters =
+    filters.tag !== "All" ||
+    filters.priority !== "All" ||
+    filters.assignee !== "All";
 
   // Switches asc to desc and vice versa
   function toggleSortDir() {
@@ -85,10 +91,14 @@ export function useTaskView(tasks: Task[]) {
   return {
     visibleTasks: tasks
       .filter((task) => {
-        const { tag, priority } = filters;
+        const { tag, priority, assignee } = filters;
         return (
           (tag === "All" || task.tag === tag) &&
-          (priority === "All" || task.priority === priority)
+          (priority === "All" || task.priority === priority) &&
+          (assignee === "All" ||
+            (assignee === "Unassigned"
+              ? !task.assignee
+              : task.assignee?._id === assignee))
         );
       })
       .sort((a, b) => {

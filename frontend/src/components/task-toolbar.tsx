@@ -11,6 +11,8 @@ import {
   type Filters,
 } from "@/hooks/useTaskView";
 import { PRIORITIES, TAGS } from "@/types/tasks";
+import type { ListUser } from "@/types/lists";
+import { UserAvatar } from "@/components/user-avatar";
 import { PriorityBadge } from "@/components/priority-badge";
 import { TagBadge } from "@/components/tag-badge";
 import { Button } from "@/components/ui/button";
@@ -49,6 +51,8 @@ interface TaskToolbarProps {
   updateFilters: <K extends keyof Filters>(field: K, value: Filters[K]) => void;
   resetFilters: () => void;
   hasActiveFilters: boolean;
+  // Who tasks can be assigned to; omitted in personal lists
+  members?: ListUser[];
 }
 
 export function TaskToolbar({
@@ -60,6 +64,7 @@ export function TaskToolbar({
   updateFilters,
   resetFilters,
   hasActiveFilters,
+  members,
 }: TaskToolbarProps) {
   return (
     <div className="flex flex-row flex-wrap items-center justify-between gap-2">
@@ -174,6 +179,37 @@ export function TaskToolbar({
           </SelectContent>
         </Select>
 
+        {/* Filter by assignee; only shared lists have assignees */}
+        {members && (
+          <Select
+            value={filters.assignee}
+            onValueChange={(v) => v && updateFilters("assignee", v)}
+          >
+            <SelectTrigger
+              aria-label="Filter by assignee"
+              className="border-0 dark:bg-transparent"
+            >
+              <SelectValue placeholder="Assignee">
+                {(v: string | null) => {
+                  if (v === "Unassigned") return "Unassigned";
+                  const member = members.find((m) => m._id === v);
+                  return member ? <Member member={member} /> : "All assignees";
+                }}
+              </SelectValue>
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="All">All assignees</SelectItem>
+              <SelectItem value="Unassigned">Unassigned</SelectItem>
+              {members.map((m) => (
+                <SelectItem key={m._id} value={m._id}>
+                  <Member member={m} />
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
         {hasActiveFilters && (
           // Reset filters
           <Button
@@ -188,5 +224,14 @@ export function TaskToolbar({
         )}
       </div>
     </div>
+  );
+}
+
+function Member({ member }: { member: ListUser }) {
+  return (
+    <span className="flex min-w-0 items-center gap-2">
+      <UserAvatar displayName={member.displayName} size="sm" />
+      <span className="truncate">{member.displayName}</span>
+    </span>
   );
 }
