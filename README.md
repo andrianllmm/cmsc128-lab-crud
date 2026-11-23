@@ -145,6 +145,8 @@ Register the accounts in the app, then seed their Personal lists:
 pnpm seed alice@example.com bob@example.com
 ```
 
+With two or more emails, it also creates a shared list ("CMSC 128 Group Project"): the first email owns it, the rest are members. Its tasks are split between assignees, with some unassigned. It never creates accounts and is safe to rerun (existing data is skipped).
+
 ## Verify
 
 - Backend health check: http://localhost:3000/api/health

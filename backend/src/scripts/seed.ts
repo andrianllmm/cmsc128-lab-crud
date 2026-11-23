@@ -1,9 +1,11 @@
 /**
- * Adds sample tasks to the personal lists of already-registered users.
+ * Adds sample tasks to the personal lists of already-registered users, and,
+ * given two or more users, a shared list (first email owns it, the rest are members).
  * Usage: pnpm seed <email> [email...]
  *
  * Users must register through the app first; this never creates accounts.
- * A user whose personal list already has tasks is skipped, so it's safe to rerun.
+ * A user whose personal list already has tasks is skipped, and so is an
+ * existing shared list, so it's safe to rerun.
  * */
 import mongoose from "mongoose";
 import { connectDB } from "../config/db.js";
@@ -38,6 +40,93 @@ const SAMPLE_TASKS = [
   { title: "Buy groceries", tag: "Personal" },
   { title: "Water the plants", done: true },
 ];
+
+const SHARED_LIST_NAME = "CMSC 128 Group Project";
+
+// assignee is an index into the users (0 = owner); omitted means unassigned
+const SHARED_TASKS = [
+  {
+    title: "Design the database schema",
+    assignee: 0,
+    priority: "High",
+    tag: "Backend",
+    dueDate: daysFromNow(3),
+  },
+  {
+    title: "Build the task list UI",
+    assignee: 1,
+    priority: "High",
+    tag: "Frontend",
+    dueDate: daysFromNow(4),
+  },
+  {
+    title: "Write API tests",
+    assignee: 2,
+    priority: "Medium",
+    tag: "Backend",
+    dueDate: daysFromNow(6),
+  },
+  {
+    title: "Prepare the demo slides",
+    assignee: 1,
+    priority: "Low",
+    tag: "School",
+    dueDate: daysFromNow(-1),
+  },
+  { title: "Fix login redirect bug", assignee: 0, done: true, tag: "Frontend" },
+  { title: "Update the README", tag: "Docs" },
+  { title: "Plan the presentation schedule" },
+];
+
+async function seedSharedList(emails: string[]) {
+  if (emails.length < 2) return;
+
+  const users: NonNullable<
+    Awaited<ReturnType<typeof userService.findByEmail>>
+  >[] = [];
+  for (const email of emails) {
+    const user = await userService.findByEmail(email.toLowerCase());
+    if (!user) {
+      console.log(`shared list: ${email} has no account, skipped`);
+      return;
+    }
+    users.push(user);
+  }
+  const [owner, ...members] = users;
+  if (!owner) return;
+
+  if (
+    await ListModel.exists({
+      owner: owner._id,
+      name: SHARED_LIST_NAME,
+      personal: false,
+    })
+  ) {
+    console.log(`shared list: "${SHARED_LIST_NAME}" already exists, skipped`);
+    return;
+  }
+
+  const list = await ListModel.create({
+    name: SHARED_LIST_NAME,
+    owner: owner._id,
+    members: members.map((m) => m._id),
+  });
+  await TaskModel.insertMany(
+    SHARED_TASKS.map(({ assignee, ...task }) => {
+      const assigned =
+        assignee === undefined ? undefined : users[assignee % users.length];
+      return {
+        ...task,
+        list: list._id,
+        owner: owner._id,
+        ...(assigned && { assignee: assigned._id }),
+      };
+    }),
+  );
+  console.log(
+    `shared list: created "${SHARED_LIST_NAME}" with ${members.length} member(s) and ${SHARED_TASKS.length} tasks`,
+  );
+}
 
 async function seedUser(email: string) {
   const user = await userService.findByEmail(email.toLowerCase());
@@ -74,6 +163,7 @@ async function main() {
   await connectDB();
   try {
     for (const email of emails) await seedUser(email);
+    await seedSharedList(emails);
   } finally {
     await mongoose.disconnect();
   }
