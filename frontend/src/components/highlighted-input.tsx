@@ -13,6 +13,8 @@ const MATCH_COLORS: Record<TaskMatch["kind"], string> = {
 interface HighlightedInputProps extends React.ComponentProps<"input"> {
   value: string;
   matches: TaskMatch[];
+  // Matches the overlay to custom input padding
+  overlayClassName?: string;
 }
 
 /**
@@ -24,6 +26,7 @@ export function HighlightedInput({
   value,
   matches,
   className,
+  overlayClassName,
   onScroll,
   ...props
 }: HighlightedInputProps) {
@@ -64,7 +67,10 @@ export function HighlightedInput({
       <div
         ref={overlayRef}
         aria-hidden
-        className="pointer-events-none absolute inset-0 flex items-center overflow-hidden border border-transparent px-2.5 py-1 text-base whitespace-pre text-foreground md:text-sm"
+        className={cn(
+          "pointer-events-none absolute inset-0 flex items-center overflow-hidden border border-transparent px-2.5 py-1 text-base whitespace-pre text-foreground md:text-sm",
+          overlayClassName,
+        )}
       >
         {/* One inline wrapper, since flex drops whitespace-only text between marks */}
         <span>{pieces}</span>
