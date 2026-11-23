@@ -19,6 +19,7 @@ import {
   SidebarMenuSkeleton,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Kbd } from "@/components/ui/kbd";
 import { UserMenu } from "@/components/user-menu";
 import { NewListDialog } from "@/components/new-list-dialog";
 import { ListActionsMenu } from "@/components/list-actions-menu";
@@ -51,6 +52,7 @@ export function AppSidebar({ user }: { user: User }) {
               >
                 <CirclePlusIcon />
                 Add task
+                <Kbd className="ml-auto">Q</Kbd>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>

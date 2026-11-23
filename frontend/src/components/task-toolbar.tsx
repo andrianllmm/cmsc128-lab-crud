@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import {
   ArrowDownIcon,
   ArrowUpDownIcon,
@@ -14,6 +15,7 @@ import {
 import { PRIORITIES, TAGS } from "@/types/tasks";
 import type { ListUser } from "@/types/lists";
 import { UserAvatar } from "@/components/user-avatar";
+import { useHotkey } from "@/hooks/useHotkey";
 import { PriorityBadge } from "@/components/priority-badge";
 import { TagBadge } from "@/components/tag-badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +24,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { Kbd } from "@/components/ui/kbd";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,6 +75,10 @@ export function TaskToolbar({
   hasActiveFilters,
   members,
 }: TaskToolbarProps) {
+  // "/" jumps to the search box
+  const searchRef = useRef<HTMLInputElement>(null);
+  useHotkey("/", () => searchRef.current?.focus());
+
   return (
     <div className="flex flex-row flex-wrap items-center justify-between gap-2">
       {/* Sorting */}
@@ -133,10 +140,15 @@ export function TaskToolbar({
         <InputGroupInput
           type="search"
           aria-label="Search tasks"
+          ref={searchRef}
+          aria-keyshortcuts="/"
           placeholder="Search"
           value={filters.search}
           onChange={(e) => updateFilters("search", e.target.value)}
         />
+        <InputGroupAddon align="inline-end">
+          <Kbd>/</Kbd>
+        </InputGroupAddon>
       </InputGroup>
 
       {/* Filtering */}

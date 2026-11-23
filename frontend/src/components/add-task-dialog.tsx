@@ -2,6 +2,7 @@ import { PlusIcon } from "lucide-react";
 import type { CreateTaskInput } from "@/schemas/tasks";
 import type { ListUser } from "@/types/lists";
 import { useTaskComposer } from "@/hooks/useTaskComposer";
+import { useHotkey } from "@/hooks/useHotkey";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { TaskForm } from "@/components/task-form";
@@ -37,15 +38,17 @@ export function AddTaskDialog({ members, onSubmit }: AddTaskDialogProps) {
   );
 }
 
-// Always-visible button for adding a task
+// Always-visible button for adding a task; also opens with Q
 export function AddTaskFab() {
   const { openComposer } = useTaskComposer();
+  useHotkey("q", openComposer);
 
   return (
     <Button
       size="icon-lg"
       aria-label="Add task"
-      title="Add task"
+      title="Add task (Q)"
+      aria-keyshortcuts="Q"
       onClick={openComposer}
       className="fixed right-6 bottom-6 z-20 size-12 rounded-full shadow-lg"
     >
