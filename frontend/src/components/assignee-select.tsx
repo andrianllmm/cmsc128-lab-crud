@@ -30,7 +30,12 @@ export function AssigneeSelect({
       value={value ?? UNASSIGNED}
       onValueChange={(v) => onValueChange(v === UNASSIGNED ? null : v)}
     >
-      <SelectTrigger id={id} size="sm" aria-label="Assignee">
+      <SelectTrigger
+        id={id}
+        size="sm"
+        aria-label="Assignee"
+        className="border-0 dark:bg-transparent"
+      >
         <SelectValue>
           {(v: string | null) => {
             const member = members.find((m) => m._id === v);
