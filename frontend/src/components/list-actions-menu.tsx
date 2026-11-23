@@ -1,9 +1,16 @@
 import { useState } from "react";
-import { EllipsisIcon, Loader2Icon, PencilIcon, TrashIcon } from "lucide-react";
-import type { CreateListInput } from "@/schemas/lists";
+import {
+  EllipsisIcon,
+  Loader2Icon,
+  PencilIcon,
+  TrashIcon,
+  UsersIcon,
+} from "lucide-react";
+import type { AddMemberInput, CreateListInput } from "@/schemas/lists";
 import type { List } from "@/types/lists";
-import { Button } from "@/components/ui/button";
+import { SidebarMenuAction } from "@/components/ui/sidebar";
 import { ListNameForm } from "@/components/list-name-form";
+import { ListMembersDialog } from "@/components/list-members-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,18 +36,24 @@ import {
 
 interface ListActionsMenuProps {
   list: List;
+  isOwner: boolean;
+  onAddMember: (data: AddMemberInput) => Promise<void>;
   onRename: (data: CreateListInput) => Promise<boolean>;
   onDelete: () => Promise<unknown>;
 }
 
 /**
- * Rename and delete actions for a list the user owns.
+ * Members, rename, and delete actions for a shared list.
+ * Only the owner can rename or delete.
  * */
 export function ListActionsMenu({
   list,
+  isOwner,
+  onAddMember,
   onRename,
   onDelete,
 }: ListActionsMenuProps) {
+  const [viewingMembers, setViewingMembers] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   // Keeps the confirmation open and disabled until the delete finishes
@@ -57,10 +70,8 @@ export function ListActionsMenu({
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
+            <SidebarMenuAction
+              showOnHover
               aria-label="List options"
               title="List options"
             />
@@ -69,20 +80,36 @@ export function ListActionsMenu({
           <EllipsisIcon />
         </DropdownMenuTrigger>
 
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setRenaming(true)}>
-            <PencilIcon />
-            Rename
+        <DropdownMenuContent side="right" align="start">
+          <DropdownMenuItem onClick={() => setViewingMembers(true)}>
+            <UsersIcon />
+            Members
           </DropdownMenuItem>
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => setDeleting(true)}
-          >
-            <TrashIcon />
-            Delete
-          </DropdownMenuItem>
+          {isOwner && (
+            <>
+              <DropdownMenuItem onClick={() => setRenaming(true)}>
+                <PencilIcon />
+                Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setDeleting(true)}
+              >
+                <TrashIcon />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <ListMembersDialog
+        list={list}
+        isOwner={isOwner}
+        open={viewingMembers}
+        onOpenChange={setViewingMembers}
+        onAddMember={onAddMember}
+      />
 
       {/* Rename dialog */}
       <Dialog open={renaming} onOpenChange={setRenaming}>

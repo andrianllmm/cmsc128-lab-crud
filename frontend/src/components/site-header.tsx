@@ -3,7 +3,6 @@ import { ListTodoIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { UserMenu } from "@/components/user-menu";
 
 export function SiteHeader() {
   return (
@@ -31,15 +30,13 @@ export function SiteHeader() {
 }
 
 function HeaderActions() {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   });
 
-  // Placeholder the size of the avatar while the user loads
-  if (loading) return <Skeleton className="size-8 rounded-full" />;
-
-  if (user) return <UserMenu user={user} />;
+  // Placeholder while the user loads
+  if (loading) return <Skeleton className="h-7 w-16" />;
 
   // On the login page, offer the other way in instead of a link to the same page
   const onLogin = pathname === "/login";
