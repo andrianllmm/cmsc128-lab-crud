@@ -1,4 +1,4 @@
-import { useId, useRef } from "react";
+import { useId, useRef, useState } from "react";
 import { useForm } from "@tanstack/react-form";
 import type { z } from "zod";
 import { Loader2Icon } from "lucide-react";
@@ -39,6 +39,9 @@ export function TaskForm({
   // changes and the user's manual picks stick while they keep typing
   const lastParsed = useRef(parseTaskInput(""));
 
+  // Keywords (lowercased) the user backspaced back into plain text
+  const [dismissed, setDismissed] = useState<ReadonlySet<string>>(new Set());
+
   const form = useForm({
     defaultValues,
     validators: {
@@ -52,6 +55,7 @@ export function TaskForm({
       if (ok && !task) {
         formApi.reset();
         lastParsed.current = parseTaskInput("");
+        setDismissed(new Set());
       }
     },
   });
@@ -59,8 +63,8 @@ export function TaskForm({
   /**
    * Fills the due date, priority, and tag fields from keywords in the title.
    * */
-  function applyParsed(text: string) {
-    const parsed = parseTaskInput(text);
+  function applyParsed(text: string, skip: ReadonlySet<string>) {
+    const parsed = parseTaskInput(text, skip);
     const last = lastParsed.current;
 
     if (parsed.dueDate?.getTime() !== last.dueDate?.getTime()) {
@@ -83,7 +87,7 @@ export function TaskForm({
         e.stopPropagation();
         // Save the create form's title without its keywords
         if (!task) {
-          const parsed = parseTaskInput(form.getFieldValue("title"));
+          const parsed = parseTaskInput(form.getFieldValue("title"), dismissed);
           form.setFieldValue("title", parsed.title);
           lastParsed.current = parseTaskInput(parsed.title);
         }
@@ -95,7 +99,9 @@ export function TaskForm({
       <form.Field name="title">
         {(field) => {
           // Only the create form parses keywords
-          const parsed = task ? null : parseTaskInput(field.state.value);
+          const parsed = task
+            ? null
+            : parseTaskInput(field.state.value, dismissed);
           return (
             <FormField
               htmlFor={`${id}-title`}
@@ -115,7 +121,29 @@ export function TaskForm({
                 onBlur={field.handleBlur}
                 onChange={(e) => {
                   field.handleChange(e.target.value);
-                  if (!task) applyParsed(e.target.value);
+                  if (task) return;
+                  // Forget dismissed keywords that were deleted, so retyping
+                  // one parses it again
+                  const text = e.target.value.toLowerCase();
+                  const skip = new Set(
+                    [...dismissed].filter((word) => text.includes(word)),
+                  );
+                  setDismissed(skip);
+                  applyParsed(e.target.value, skip);
+                }}
+                // Backspace right after a keyword turns it back into plain text
+                onKeyDown={(e) => {
+                  if (task || e.key !== "Backspace" || !parsed) return;
+                  const { selectionStart, selectionEnd } = e.currentTarget;
+                  if (selectionStart !== selectionEnd) return;
+                  const match = parsed.matches.find(
+                    (m) => m.end === selectionStart,
+                  );
+                  if (!match) return;
+                  e.preventDefault();
+                  const skip = new Set(dismissed).add(match.text);
+                  setDismissed(skip);
+                  applyParsed(field.state.value, skip);
                 }}
                 autoFocus={!task}
               />
