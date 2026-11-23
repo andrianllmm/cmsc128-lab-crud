@@ -177,7 +177,7 @@ export function TaskForm({
               htmlFor={`${id}-dueDate`}
               label="Due date"
               error={field.state.meta.errors[0]?.message}
-              className="col-span-2 sm:flex-1"
+              className="col-span-2 min-w-0 sm:flex-1"
             >
               <DateTimePicker
                 id={`${id}-dueDate`}

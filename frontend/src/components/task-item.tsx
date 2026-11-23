@@ -85,15 +85,8 @@ export function TaskItem({
             </CardTitle>
           </div>
 
-          {/* Creator and delete button */}
+          {/* Delete button */}
           <CardAction className="relative z-10 flex items-center gap-1">
-            {showCreator && (
-              <UserAvatar
-                displayName={task.owner.displayName}
-                size="sm"
-                label={`Created by ${task.owner.displayName}`}
-              />
-            )}
             <TaskDeleteConfirmDialog
               taskTitle={task.title}
               onConfirm={() => onDelete(task._id)}
@@ -138,7 +131,7 @@ export function TaskItem({
 
       {/* Edit task dialog; kept outside the card so the delete dialog isn't nested in it */}
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Edit task</DialogTitle>
             {showCreator && (
